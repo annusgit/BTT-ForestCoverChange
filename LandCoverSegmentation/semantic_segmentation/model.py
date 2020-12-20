@@ -229,7 +229,7 @@ def see_children_recursively(graph, layer=None):
 if __name__ == '__main__':
     # check_model
     model = UNet(input_channels=3, num_classes=4)
-    model.cuda(device='gpu')
+    model.cuda(device='cuda')
     model.eval()
     with torch.no_grad():
         summary(model, input_size=(3, 128, 128))

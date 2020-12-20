@@ -657,7 +657,7 @@ def main():
 
     # loaders = get_dataloaders_generated_data(generated_data_path='E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\'
     #                                                              'Pickled_data\\',
-    loaders = get_dataloaders_generated_data(generated_data_path='.. /../../training_data/Pickled_data/', save_data_path='data_lists',
+    loaders = get_dataloaders_generated_data(generated_data_path='../../../training_data/Pickled_data/', save_data_path='data_lists',
                                              model_input_size=128, batch_size=64, train_split=0.8, one_hot=True, num_workers=4, max_label=2)
 
     # loaders = get_dataloaders_generated_data(generated_data_path='/home/annuszulfiqar/forest_cover/forestcoverUnet/'

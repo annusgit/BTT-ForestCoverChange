@@ -80,7 +80,7 @@ def get_images_from_large_file(bands, year, region, stride):
             this_example_save_path = os.path.join(destination, '{}_{}_{}.pkl'.format(region, year, count))
             with open(this_example_save_path, 'wb') as this_pickle:
                 pickle.dump((example_subset, label_subset), file=this_pickle, protocol=pickle.HIGHEST_PROTOCOL)
-                print('log: Saved {} '.format(this_example_save_path), end='')
+                print('log: Saved {} '.format(this_example_save_path))
                 print(i*stride, (i+1)*stride, j*stride, (j+1)*stride)
             pass
     pass

@@ -608,7 +608,7 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                         transformation=transformation)
     test_data = dataset(data_list=test_list, data_map_path=os.path.join(save_data_path, 'test_datamap.pkl'), mode='test', stride=model_input_size,
                         transformation=transformation)
-    # print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
+    print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
     # print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
     # print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
     # print('LOG: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))

@@ -45,10 +45,10 @@ def adaptive_resize(array, new_shape):
 
 
 def get_images_from_large_file(bands, year, region, stride):
-    data_directory_path = 'E:\\Forest Cover - Redo 2020\\Training Data\\training data'
+    data_directory_path = '~/training_data/clipped_training_data/'
     image_path = os.path.join(data_directory_path, '{}_image.tif'.format(region))
     label_path = os.path.join(data_directory_path, '{}_{}.tif'.format(region, year))
-    destination_directory_path = 'E:\\Forest Cover - Redo 2020\\Training Data\\training data\\Pickled_data'
+    destination_directory_path = os.path.join(data_directory_path, '~/training_data/pickled_clipped_training_data/')
     # destination = os.path.join(destination_directory_path, '{}'.format(year))
     destination = destination_directory_path
     if not os.path.exists(destination):
@@ -689,16 +689,16 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
 
     # generate pickle files to train from
-    # all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
-    #                  "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    # for district in all_districts:
-    #     if district == "abbottabad":
-    #         continue
-    #     print("=======================================================================================================")
-    #     get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
+    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+                     "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    for district in all_districts:
+        if district == "abbottabad":
+            continue
+        print("=======================================================================================================")
+        get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
 
     # check some generated pickle files
     # for i in range(1, 65):

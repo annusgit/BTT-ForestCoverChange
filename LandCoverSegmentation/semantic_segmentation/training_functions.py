@@ -81,7 +81,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
             # dice_criterion(logits, label) #+ focal_criterion(logits, not_one_hot_target) #
             # print(logits.view(batch_size, -1).shape, logits.view(batch_size, -1).shape)
             # loss = focal_criterion(logits.view(-1, 2), label.view(-1, 2))
-            print(logits.shape, not_one_hot_target.shape)
+            # print(logits.shape, not_one_hot_target.shape)
             loss = focal_criterion(logits, not_one_hot_target)  # dice_criterion(logits, label) #
             loss.backward()
             clip_grad_norm_(model.parameters(), 0.05)

@@ -60,8 +60,8 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
         model.load_state_dict(torch.load(model_path), strict=False)
         print('log: Resuming from model {} ...'.format(model_path))
         print('log: Evaluating now...')
-        best_evaluation = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader,
-                                   cuda=cuda, device=device, writer=None, batch_size=batch_size, step=0)
+        best_evaluation = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
+                                   batch_size=batch_size, step=0)
         print('LOG: Starting with best evaluation accuracy: {:.3f}%'.format(best_evaluation))
     ##########################################################################
 

@@ -662,7 +662,7 @@ def main():
     #                                                              'Pickled_data\\',
     loaders = get_dataloaders_generated_data(generated_data_path='/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data/',
                                              save_data_path='/home/azulfiqar_bee15seecs/training_data/training_lists', model_input_size=128,
-                                             batch_size=64, train_split=0.8, one_hot=True, num_workers=4, max_label=2)
+                                             num_classes=3, train_split=0.8, one_hot=True, batch_size=64, num_workers=4, max_label=2)
 
     # loaders = get_dataloaders_generated_data(generated_data_path='/home/annuszulfiqar/forest_cover/forestcoverUnet/'
     #                                                              'ESA_landcover/semantic_segmentation/'

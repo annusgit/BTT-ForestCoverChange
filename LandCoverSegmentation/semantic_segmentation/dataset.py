@@ -608,11 +608,10 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                         transformation=transformation)
     test_data = dataset(data_list=test_list, data_map_path=os.path.join(save_data_path, 'test_datamap.pkl'), mode='test', stride=model_input_size,
                         transformation=transformation)
-    print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
-    print('LOG: [train_list, eval_list, test_list] ->', len(train_list), len(eval_list), len(test_list))
-    print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
-    print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
-    print('LOG: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))
+    # print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
+    # print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
+    # print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
+    # print('LOG: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))
 
     # for j in range(10):
     #     print(train_data[j])
@@ -678,7 +677,7 @@ def main():
             examples, labels = data['input'], data['label']
             print('-> on batch {}/{}, {}'.format(idx+1, len(train_dataloader), examples.size()))
             this_example_subset = (examples[0].numpy()).transpose(1, 2, 0)
-            this = np.asarray(255*(this_example_subset[:, :, [3, 2, 1]]), dtype=np.uint8)
+            this = np.asarray(255*(this_example_subset[:, :, [2, 1, 0]]), dtype=np.uint8)
             that = labels[0].numpy().astype(np.uint8)
             # ndvi = this_example_subset[:,:,11]
             print(this.shape, that.shape, np.unique(that))

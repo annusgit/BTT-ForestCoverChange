@@ -1,5 +1,3 @@
-
-
 from __future__ import print_function
 from __future__ import division
 import torch
@@ -8,8 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 import matplotlib.pyplot as plt
-
-import os,sys,random,time
+import os, sys, random, time
 import argparse
 
 
@@ -157,11 +154,10 @@ def check_focal_loss():
 
 
 def check_focal_loss2d():
-    num_c = 16
+    num_c = 3
     weights = torch.Tensor([7, 2, 241, 500, 106, 5, 319, 0.06, 0.58, 0.125, 0.045, 0.18, 0.026, 0.506, 0.99, 0.321])
     out_x_np = np.random.randint(0, num_c, size=(16*64*64*num_c)).reshape((16, num_c, 64, 64))
     target_np = np.random.randint(0, num_c, size=(16*64*64*1)).reshape((16, 64, 64))
-
     logits = torch.Tensor(out_x_np)
     target = torch.LongTensor(target_np)
     weighted_loss = FocalLoss2d(weight=weights)
@@ -211,9 +207,9 @@ def check_dice_loss_new():
 
 if __name__ == '__main__':
     # check_focal_loss()
-    check_dice_loss()
+    # check_dice_loss()
     check_focal_loss2d()
-    check_tversky_loss()
+    # check_tversky_loss()
 
 
 

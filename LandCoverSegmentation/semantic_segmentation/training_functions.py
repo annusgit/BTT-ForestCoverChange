@@ -35,7 +35,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
     # define loss and optimizer
     optimizer = RMSprop(model.parameters(), lr=lr)
-    weights = torch.Tensor([1, 1]) # forest has ____ times more weight
+    weights = torch.Tensor([1, 1, 1])  # forest has ____ times more weight
     weights = weights.cuda(device=device) if cuda else weights
     focal_criterion = FocalLoss2d(weight=weights)
     # crossentropy_criterion = nn.BCELoss(weight=weights)

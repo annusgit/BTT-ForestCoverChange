@@ -45,10 +45,10 @@ def adaptive_resize(array, new_shape):
 
 
 def get_images_from_large_file(bands, year, region, stride):
-    data_directory_path = '~/training_data/clipped_training_data/'
+    data_directory_path = '/home/azulfiqar_bee15seecs/training_data/clipped_training_data/'
     image_path = os.path.join(data_directory_path, '{}_image.tif'.format(region))
     label_path = os.path.join(data_directory_path, '{}_{}.tif'.format(region, year))
-    destination_directory_path = '~/training_data/pickled_clipped_training_data/'
+    destination_directory_path = '/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data/'
     # destination = os.path.join(destination_directory_path, '{}'.format(year))
     destination = destination_directory_path
     if not os.path.exists(destination):

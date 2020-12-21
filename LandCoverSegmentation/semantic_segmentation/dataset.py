@@ -657,8 +657,9 @@ def main():
 
     # loaders = get_dataloaders_generated_data(generated_data_path='E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\'
     #                                                              'Pickled_data\\',
-    loaders = get_dataloaders_generated_data(generated_data_path='../../../training_data/Pickled_data/', save_data_path='data_lists',
-                                             model_input_size=128, batch_size=64, train_split=0.8, one_hot=True, num_workers=4, max_label=2)
+    loaders = get_dataloaders_generated_data(generated_data_path='/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data/',
+                                             save_data_path='/home/azulfiqar_bee15seecs/training_data/training_lists', model_input_size=128,
+                                             batch_size=64, train_split=0.8, one_hot=True, num_workers=4, max_label=2)
 
     # loaders = get_dataloaders_generated_data(generated_data_path='/home/annuszulfiqar/forest_cover/forestcoverUnet/'
     #                                                              'ESA_landcover/semantic_segmentation/'
@@ -689,16 +690,16 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
+    main()
 
     # generate pickle files to train from
-    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
-                     "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    for district in all_districts:
-        if district == "abbottabad":
-            continue
-        print("=======================================================================================================")
-        get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
+    # all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+    #                  "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    # for district in all_districts:
+    #     if district == "abbottabad":
+    #         continue
+    #     print("=======================================================================================================")
+    #     get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
 
     # check some generated pickle files
     # for i in range(1, 65):

@@ -45,9 +45,8 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
     LR_decay = (lr_final / lr) ** (1. / epochs)
     scheduler = lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=LR_decay)
 
-    loaders = get_dataloaders_generated_data(generated_data_path=generated_data_path, save_data_path=save_data,
-                                             model_input_size=input_dim, batch_size=batch_size, num_classes=2,
-                                             train_split=0.8, one_hot=True, num_workers=workers, max_label=1)
+    loaders = get_dataloaders_generated_data(generated_data_path=generated_data_path, save_data_path=save_data, model_input_size=input_dim,
+                                             batch_size=batch_size, num_classes=3, train_split=0.8, one_hot=True, num_workers=workers, max_label=2)
     train_loader, val_dataloader, test_loader = loaders
     best_evaluation = 0.0
     ################################################################

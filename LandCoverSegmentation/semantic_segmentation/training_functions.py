@@ -81,7 +81,8 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
             # dice_criterion(logits, label) #+ focal_criterion(logits, not_one_hot_target) #
             # print(logits.view(batch_size, -1).shape, logits.view(batch_size, -1).shape)
             # loss = focal_criterion(logits.view(-1, 2), label.view(-1, 2))
-            loss = focal_criterion(logits, not_one_hot_target) # dice_criterion(logits, label) #
+            print(logits.shape, not_one_hot_target.shape)
+            loss = focal_criterion(logits, not_one_hot_target)  # dice_criterion(logits, label) #
             loss.backward()
             clip_grad_norm_(model.parameters(), 0.05)
             optimizer.step()
@@ -90,12 +91,10 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
             denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
             total_correct += numerator
             total_examples += denominator
-
             if idx % log_after == 0 and idx > 0:
                 accuracy = float(numerator) * 100 / denominator
-                print('{}. ({}/{}) output size = {}, loss = {}, '
-                      'accuracy = {}/{} = {:.2f}%'.format(k, idx, len(train_loader), out_x.size(), loss.item(),
-                                                          numerator, denominator, accuracy))
+                print('{}. ({}/{}) output size = {}, loss = {}, accuracy = {}/{} = {:.2f}%'.format(k, idx, len(train_loader), out_x.size(), loss.item(),
+                                                                                                   numerator, denominator, accuracy))
             net_loss.append(loss.item())
 
         # this should be done at the end of epoch only
@@ -108,8 +107,8 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
         # validate model
         print('log: Evaluating now...')
-        eval_accuracy = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader,
-                                 cuda=cuda, device=device, writer=None, batch_size=batch_size, step=k)
+        eval_accuracy = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
+                                 batch_size=batch_size, step=k)
 
         # save best performing models only
         if eval_accuracy > best_evaluation:

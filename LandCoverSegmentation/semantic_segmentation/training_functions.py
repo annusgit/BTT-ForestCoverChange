@@ -82,7 +82,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
             torch.save(model.state_dict(), model_path)
             print('log: Saved best performing {}'.format(model_path))
 
-            del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-6))
+            del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-10))
             if os.path.exists(del_this):
                 os.remove(del_this)
                 print('log: Removed {}'.format(del_this))

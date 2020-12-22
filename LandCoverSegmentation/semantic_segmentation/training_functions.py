@@ -166,10 +166,7 @@ def eval_net(**kwargs):
         # writer.add_scalar(tag='eval accuracy', scalar_value=mean_accuracy, global_step=step)
         # writer.add_scalar(tag='eval loss', scalar_value=mean_loss, global_step=step)
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-        print('LOG: validation: total loss = {:.5f}, total accuracy = ({}/{}) = {:.5f}%'.format(mean_loss,
-                                                                                                total_correct,
-                                                                                                total_examples,
-                                                                                                mean_accuracy))
+        print('LOG: validation: total loss = {:.5f}, total accuracy = ({}/{}) = {:.5f}%'.format(mean_loss, total_correct, total_examples, mean_accuracy))
         print('Log: Confusion matrix')
         print(confusion_meter.value())
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
@@ -185,7 +182,7 @@ def eval_net(**kwargs):
         model_path = os.path.join(kwargs['save_dir'], 'model-{}.pt'.format(pre_model))
         model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
         print('log: resumed model {} successfully!'.format(pre_model))
-        weights = torch.Tensor([1, 1])  # forest has ten times more weight
+        weights = torch.Tensor([1, 1, 1])  # forest has ten times more weight
         weights = weights.cuda(device=device) if cuda else weights
         # dice_criterion, focal_criterion = nn.CrossEntropyLoss(), DiceLoss(), FocalLoss2d()
         # crossentropy_criterion = nn.BCELoss(weight=weights)
@@ -247,4 +244,6 @@ def eval_net(**kwargs):
             pkl.dump(confusion_meter.value(), this, protocol=pkl.HIGHEST_PROTOCOL)
         with open('un_normalized.pkl', 'wb') as this:
             pkl.dump(un_confusion_meter.value(), this, protocol=pkl.HIGHEST_PROTOCOL)
+            pass
+        pass
     pass

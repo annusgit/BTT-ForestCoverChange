@@ -188,18 +188,14 @@ def eval_net(**kwargs):
         # crossentropy_criterion = nn.BCELoss(weight=weights)
         focal_criterion = FocalLoss2d(weight=weights)
         # dice_criterion = DiceLoss(weights=weights)
-        loaders = get_dataloaders_generated_data(generated_data_path=kwargs['generated_data_path'],
-                                                 save_data_path=kwargs['save_data'],
-                                                 model_input_size=kwargs['input_dim'],
-                                                 batch_size=batch_size,
-                                                 # train_split=0.8,
-                                                 one_hot=True,
-                                                 num_workers=kwargs['workers'],
-                                                 max_label=num_classes)
-        train_loader, test_loader, empty_loader = loaders
+        loaders = get_dataloaders_generated_data(generated_data_path=kwargs['generated_data_path'], save_data_path=kwargs['save_data'],
+                                                 model_input_size=kwargs['input_dim'], batch_size=batch_size, one_hot=True,
+                                                 num_workers=kwargs['workers'], max_label=num_classes)  # train_split=0.8,
         net_loss = []
+        train_dataloader, val_dataloader, test_dataloader = loaders
         total_correct, total_examples = 0, 0
-        for idx, data in enumerate(test_loader):
+        print("(LOG): Evaluating performance on test data...")
+        for idx, data in enumerate(test_dataloader):
             test_x, label = data['input'], data['label']
             test_x = test_x.cuda(device=device) if cuda else test_x
             label = label.cuda(device=device) if cuda else label

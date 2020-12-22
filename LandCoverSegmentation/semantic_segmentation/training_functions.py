@@ -19,8 +19,7 @@ import torchnet as tnt
 from torchnet.meter import ConfusionMeter as CM
 
 
-def train_net(model, generated_data_path, input_dim, workers, pre_model, save_data, save_dir, sum_dir, batch_size,
-              lr, epochs, log_after, cuda, device):
+def train_net(model, generated_data_path, input_dim, workers, pre_model, save_data, save_dir, sum_dir, batch_size, lr, epochs, log_after, cuda, device):
     # print(model)
     if cuda:
         print('log: Using GPU')
@@ -69,6 +68,25 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
     for k in range(epochs):
         net_loss = []
         total_correct, total_examples = 0, 0
+
+        # validate model
+        print('log: Evaluating now...')
+        eval_accuracy = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
+                                 batch_size=batch_size, step=k)
+
+        # save best performing models only
+        if eval_accuracy > best_evaluation:
+            best_evaluation = eval_accuracy
+            model_number += 1
+            model_path = os.path.join(save_dir, 'model-{}.pt'.format(model_number))
+            torch.save(model.state_dict(), model_path)
+            print('log: Saved best performing {}'.format(model_path))
+
+            del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-6))
+            if os.path.exists(del_this):
+                os.remove(del_this)
+                print('log: Removed {}'.format(del_this))
+
         for idx, data in enumerate(train_loader):
             model.train()
             model.zero_grad()
@@ -104,24 +122,6 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
         print('####################################')
         print('LOG: epoch {} -> total loss = {:.5f}, total accuracy = {:.5f}%'.format(k, mean_loss, mean_accuracy))
         print('####################################')
-
-        # validate model
-        print('log: Evaluating now...')
-        eval_accuracy = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
-                                 batch_size=batch_size, step=k)
-
-        # save best performing models only
-        if eval_accuracy > best_evaluation:
-            best_evaluation = eval_accuracy
-            model_number += 1
-            model_path = os.path.join(save_dir, 'model-{}.pt'.format(model_number))
-            torch.save(model.state_dict(), model_path)
-            print('log: Saved best performing {}'.format(model_path))
-
-            del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-6))
-            if os.path.exists(del_this):
-                os.remove(del_this)
-                print('log: Removed {}'.format(del_this))
     pass
 
 
@@ -139,7 +139,7 @@ def eval_net(**kwargs):
         model = kwargs['model']
         focal_criterion = kwargs['criterion']
         total_examples, total_correct, net_loss = 0, 0, []
-        num_classes = 2
+        num_classes = 3
         un_confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=False)
         confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=True)
         for idx, data in enumerate(val_loader):
@@ -179,7 +179,7 @@ def eval_net(**kwargs):
         # model, images, labels, pre_model, save_dir, sum_dir, batch_size, lr, log_after, cuda
         pre_model = kwargs['pre_model']
         batch_size = kwargs['batch_size']
-        num_classes = 2  # we convert to a binary classification problem at test time only
+        num_classes = 3  # we convert to a binary classification problem at test time only
         un_confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=False)
         confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=True)
         model_path = os.path.join(kwargs['save_dir'], 'model-{}.pt'.format(pre_model))

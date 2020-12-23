@@ -75,17 +75,17 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
                                  batch_size=batch_size, step=k)
 
         # save best performing models only
-        if eval_accuracy > best_evaluation:
-            best_evaluation = eval_accuracy
-            model_number += 1
-            model_path = os.path.join(save_dir, 'model-{}.pt'.format(model_number))
-            torch.save(model.state_dict(), model_path)
-            print('log: Saved best performing {}'.format(model_path))
+        # if eval_accuracy > best_evaluation:
+        # best_evaluation = eval_accuracy
+        model_number += 1
+        model_path = os.path.join(save_dir, 'model-{}.pt'.format(model_number))
+        torch.save(model.state_dict(), model_path)
+        print('log: Saved best performing {}'.format(model_path))
 
-            del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-10))
-            if os.path.exists(del_this):
-                os.remove(del_this)
-                print('log: Removed {}'.format(del_this))
+        del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-10))
+        if os.path.exists(del_this):
+            os.remove(del_this)
+            print('log: Removed {}'.format(del_this))
 
         for idx, data in enumerate(train_loader):
             model.train()

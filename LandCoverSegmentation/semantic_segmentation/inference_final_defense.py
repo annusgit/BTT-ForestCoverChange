@@ -141,7 +141,7 @@ def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_ho
 @torch.no_grad()
 def run_inference(args):
     model = UNet(input_channels=3, num_classes=3)
-    model.load_state_dict(torch.load(args.model_path, map_location='gpu'), strict=False)
+    model.load_state_dict(torch.load(args.model_path), strict=False) # map_location='cpu'), strict=False)
     print('Log: Loaded pretrained {}'.format(args.model_path))
     model.eval()
     if args.cuda:

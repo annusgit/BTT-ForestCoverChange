@@ -1,5 +1,3 @@
-
-
 # uses the full pipeline functions from patch_classification
 # and does end-to-end detection using just the images as the input
 
@@ -70,8 +68,7 @@ def do(args):
     # call(convert_avi_to_gif, shell=True)
     # call(convert_avi_to_gif, shell=True)
     avi_to_gif(inpath=os.path.join(image_save, 'out.avi'), outpath=os.path.join(image_save, 'out.gif'))
-    avi_to_gif(inpath=os.path.join(down_image_save, 'out.avi'), outpath=os.path.join(down_image_save, 
-    																				'out.gif'))
+    avi_to_gif(inpath=os.path.join(down_image_save, 'out.avi'), outpath=os.path.join(down_image_save, 'out.gif'))
     avi_to_gif(inpath=os.path.join(image_save, 'out.avi'), outpath=os.path.join(label_save, 'out.gif'))
     # make a graph of the forestation change
     print(forestation)

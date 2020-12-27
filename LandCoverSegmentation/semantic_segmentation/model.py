@@ -1,5 +1,3 @@
-
-
 """
     UNet model definition in here
 """

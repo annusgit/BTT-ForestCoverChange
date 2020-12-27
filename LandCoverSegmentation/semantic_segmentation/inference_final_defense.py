@@ -1,18 +1,15 @@
-
-
-'''
-    Given the path to a single test image (and it's corresponding label if possible), this function generates
-    its corresponding segmentation map
-'''
-
+"""
+    Given the path to a single test image, this function generates its corresponding segmentation map
+"""
 from __future__ import print_function
 from __future__ import division
 import os
-import time
 import gdal
-import random
-import shutil
+import time
 import torch
+import shutil
+import random
+import argparse
 import numpy as np
 np.random.seed(int(time.time()))
 random.seed(int(time.time()))
@@ -35,12 +32,12 @@ def toTensor(**kwargs):
     return torch.from_numpy(image).float()
 
 
-def get_inference_loader(image_path, model_input_size=64, num_classes=4, one_hot=False, batch_size=16, num_workers=4):
+def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_hot=False, batch_size=64, num_workers=4):
 
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
-        def __init__(self, image_path, stride=model_input_size, bands=range(1,12), transformation=None):
+        def __init__(self, image_path, stride=model_input_size, bands=[2,3,4], transformation=None):
             super(dataset, self).__init__()
             self.model_input_size = model_input_size
             self.image_path = image_path
@@ -76,54 +73,49 @@ def get_inference_loader(image_path, model_input_size=64, num_classes=4, one_hot
 
         def __getitem__(self, k):
             (this_row, this_col) = self.all_images[k]
-            this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size,
-                                                       this_col:this_col + self.model_input_size, :]
+            this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
             # get more indices to add to the example
-            ndvi_band = (this_example_subset[:, :, 4] -
-                         this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
-                                                          this_example_subset[:, :, 3] + 1e-7)
-            evi_band = 2.5 * (this_example_subset[:, :, 4] -
-                              this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
-                                                               6 * this_example_subset[:, :, 3] -
-                                                               7.5 * this_example_subset[:, :, 1] + 1)
-            savi_band = 1.5 * (this_example_subset[:, :, 4] -
-                               this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
-                                                                this_example_subset[:, :, 3] + 0.5)
-            msavi_band = 0.5 * (2 * this_example_subset[:, :, 4] + 1 -
-                                np.sqrt((2 * this_example_subset[:, :, 4] + 1) ** 2 -
-                                        8 * (this_example_subset[:, :, 4] -
-                                             this_example_subset[:, :, 3])))
-            ndmi_band = (this_example_subset[:, :, 4] -
-                         this_example_subset[:, :, 5]) / (this_example_subset[:, :, 4] +
-                                                          this_example_subset[:, :, 5] + 1e-7)
-            nbr_band = (this_example_subset[:, :, 4] -
-                        this_example_subset[:, :, 6]) / (this_example_subset[:, :, 4] +
-                                                         this_example_subset[:, :, 6] + 1e-7)
-            nbr2_band = (this_example_subset[:, :, 5] -
-                         this_example_subset[:, :, 6]) / (this_example_subset[:, :, 5] +
-                                                          this_example_subset[:, :, 6] + 1e-7)
-
-            ndvi_band = np.nan_to_num(ndvi_band)
-            evi_band = np.nan_to_num(evi_band)
-            savi_band = np.nan_to_num(savi_band)
-            msavi_band = np.nan_to_num(msavi_band)
-            ndmi_band = np.nan_to_num(ndmi_band)
-            nbr_band = np.nan_to_num(nbr_band)
-            nbr2_band = np.nan_to_num(nbr2_band)
-
-            this_example_subset = np.dstack((this_example_subset, ndvi_band))
-            this_example_subset = np.dstack((this_example_subset, evi_band))
-            this_example_subset = np.dstack((this_example_subset, savi_band))
-            this_example_subset = np.dstack((this_example_subset, msavi_band))
-            this_example_subset = np.dstack((this_example_subset, ndmi_band))
-            this_example_subset = np.dstack((this_example_subset, nbr_band))
-            this_example_subset = np.dstack((this_example_subset, nbr2_band))
-            # rescale like the original dataset used for training
-            this_example_subset = this_example_subset / 1000
+            # ndvi_band = (this_example_subset[:, :, 4] -
+            #              this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
+            #                                               this_example_subset[:, :, 3] + 1e-7)
+            # evi_band = 2.5 * (this_example_subset[:, :, 4] -
+            #                   this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
+            #                                                    6 * this_example_subset[:, :, 3] -
+            #                                                    7.5 * this_example_subset[:, :, 1] + 1)
+            # savi_band = 1.5 * (this_example_subset[:, :, 4] -
+            #                    this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
+            #                                                     this_example_subset[:, :, 3] + 0.5)
+            # msavi_band = 0.5 * (2 * this_example_subset[:, :, 4] + 1 -
+            #                     np.sqrt((2 * this_example_subset[:, :, 4] + 1) ** 2 -
+            #                             8 * (this_example_subset[:, :, 4] -
+            #                                  this_example_subset[:, :, 3])))
+            # ndmi_band = (this_example_subset[:, :, 4] -
+            #              this_example_subset[:, :, 5]) / (this_example_subset[:, :, 4] +
+            #                                               this_example_subset[:, :, 5] + 1e-7)
+            # nbr_band = (this_example_subset[:, :, 4] -
+            #             this_example_subset[:, :, 6]) / (this_example_subset[:, :, 4] +
+            #                                              this_example_subset[:, :, 6] + 1e-7)
+            # nbr2_band = (this_example_subset[:, :, 5] -
+            #              this_example_subset[:, :, 6]) / (this_example_subset[:, :, 5] +
+            #                                               this_example_subset[:, :, 6] + 1e-7)
+            # ndvi_band = np.nan_to_num(ndvi_band)
+            # evi_band = np.nan_to_num(evi_band)
+            # savi_band = np.nan_to_num(savi_band)
+            # msavi_band = np.nan_to_num(msavi_band)
+            # ndmi_band = np.nan_to_num(ndmi_band)
+            # nbr_band = np.nan_to_num(nbr_band)
+            # nbr2_band = np.nan_to_num(nbr2_band)
+            # this_example_subset = np.dstack((this_example_subset, ndvi_band))
+            # this_example_subset = np.dstack((this_example_subset, evi_band))
+            # this_example_subset = np.dstack((this_example_subset, savi_band))
+            # this_example_subset = np.dstack((this_example_subset, msavi_band))
+            # this_example_subset = np.dstack((this_example_subset, ndmi_band))
+            # this_example_subset = np.dstack((this_example_subset, nbr_band))
+            # this_example_subset = np.dstack((this_example_subset, nbr2_band))
+            # # rescale like the original dataset used for training
+            # this_example_subset = this_example_subset / 1000
             this_example_subset = toTensor(image=this_example_subset)
-
-            return {'coordinates': np.asarray([this_row, this_row + self.model_input_size,
-                                               this_col, this_col + self.model_input_size]),
+            return {'coordinates': np.asarray([this_row, this_row + self.model_input_size, this_col, this_col + self.model_input_size]),
                     'input': this_example_subset}
 
         def __len__(self):
@@ -140,35 +132,30 @@ def get_inference_loader(image_path, model_input_size=64, num_classes=4, one_hot
     transformation = None
     ######################################################################################
     # create dataset class instances
-    # images_per_image means approx. how many images are in each example
-    inference_data = dataset(image_path=image_path, transformation=transformation) # more images for training
+    inference_data = dataset(image_path=image_path, transformation=transformation)
     print('LOG: inference_data ->', len(inference_data))
-    inference_loader = DataLoader(dataset=inference_data, batch_size=batch_size, shuffle=False,
-                                  num_workers=num_workers)
+    inference_loader = DataLoader(dataset=inference_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     return inference_loader
 
 
 @torch.no_grad()
 def run_inference(args):
-    model = UNet(input_channels=18, num_classes=2)
-    model.load_state_dict(torch.load(args.model_path, map_location='cpu'), strict=False)
+    model = UNet(input_channels=3, num_classes=3)
+    model.load_state_dict(torch.load(args.model_path, map_location='gpu'), strict=False)
     print('Log: Loaded pretrained {}'.format(args.model_path))
     model.eval()
     if args.cuda:
         print('log: Using GPU')
         model.cuda(device=args.device)
-
-    # regions = ['hangu', 'karak', 'kohat', 'nowshehra', 'battagram', 'abbottabad', 'haripur_region', 'kohistan',
-    #            'tor_ghar', 'mansehra', 'buner', 'chitral', 'lower_dir', 'malakand', 'shangla', 'swat', 'upper_dir']
-    regions = ['chitral', 'lower_dir', 'malakand', 'shangla', 'swat', 'upper_dir']
-
-    years = [2013, 2014, 2016, 2017, 2018]
+    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+                     "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    years = [2014, 2016, 2017, 2018, 2019, 2020]
     # change this to do this for all the images in that directory
-    for reg in regions:
+    for district in all_districts:
         for year in years:
-            test_image_path = os.path.join(args.dir_path, 'landsat8_{}_region_{}.tif'.format(year, reg))
-            inference_loader = get_inference_loader(image_path=test_image_path, model_input_size=128,
-                                                    num_classes=2, one_hot=True, batch_size=args.bs, num_workers=4)
+            test_image_path = os.path.join(args.dir_path, 'clipped_{}_{}.tif'.format(district, year))
+            inference_loader = get_inference_loader(image_path=test_image_path, model_input_size=128, num_classes=3, one_hot=True, batch_size=args.bs,
+                                                    num_workers=4)
             # we need to fill our new generated test image
             generated_map = np.empty(shape=inference_loader.dataset.get_image_size())
             for idx, data in enumerate(inference_loader):
@@ -183,15 +170,16 @@ def run_inference(args):
                     x, x_, y, y_ = coordinates[k]
                     generated_map[x:x_, y:y_] = pred_numpy[:,:,k]
 
-            save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(year, reg))
+            save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(district, year))
             np.save(save_path, generated_map)
             #########################################################################################3
             inference_loader.dataset.clear_mem()
+            pass
+        pass
     pass
 
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--m', '--model', dest='model_path', type=str)
     parser.add_argument('--d', dest='dir_path', type=str)

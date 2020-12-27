@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 for year in `seq 2016 2017`;
 	do

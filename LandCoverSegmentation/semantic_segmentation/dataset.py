@@ -440,7 +440,7 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             # get RGB bands only
             # this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
             # get all bands in the image
-            this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
+            this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
             # instead of using the Digital Numbers (DN), use the backscattering coefficient
             # HH = this_example_subset[:,:,0]
             # HV = this_example_subset[:,:,1]

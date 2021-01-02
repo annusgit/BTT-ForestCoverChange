@@ -111,8 +111,9 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
             total_examples += denominator
             if idx % log_after == 0 and idx > 0:
                 accuracy = float(numerator) * 100 / denominator
-                print('{}. ({}/{}) output size = {}, loss = {}, accuracy = {}/{} = {:.2f}%'.format(k, idx, len(train_loader), out_x.size(), loss.item(),
-                                                                                                   numerator, denominator, accuracy))
+                print('{}. ({}/{}) input size= {}, output size = {}, loss = {}, accuracy = {}/{} = {:.2f}%'.format(k, idx, len(train_loader), test_x.size(),
+                                                                                                                   out_x.size(), loss.item(), numerator,
+                                                                                                                   denominator, accuracy))
             net_loss.append(loss.item())
 
         # this should be done at the end of epoch only

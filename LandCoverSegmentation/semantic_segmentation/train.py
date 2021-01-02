@@ -9,8 +9,6 @@ from training_functions import *
 
 
 if __name__ == '__main__':
-
-    # parse
     parser = argparse.ArgumentParser()
     parser.add_argument('--function', dest='function', default='train_net')
     parser.add_argument('--data', dest='data', default='generated_data')

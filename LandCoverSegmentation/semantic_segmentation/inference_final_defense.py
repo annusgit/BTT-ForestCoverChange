@@ -21,6 +21,27 @@ import pickle as pkl
 from loss import FocalLoss2d
 from model import UNet
 
+rasterized_shapefiles_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\District_Shapefiles_as_Clipping_bands\\"
+
+
+def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands_list):
+    this_shapefile_path = os.path.join(rasterized_shapefiles_path, f"{district}_shapefile.tif")
+    ds = gdal.Open(this_shapefile_path)
+    assert ds.RasterCount == 1
+    shapefile_mask = np.array(ds.GetRasterBand(1).ReadAsArray(), dtype=np.uint8)
+    clipped_full_spectrum = list()
+    for idx, this_band in enumerate(this_landsat8_bands_list):
+        print("{}: Band-{} Size: {}".format(district, idx, this_band.shape))
+        clipped_full_spectrum.append(np.multiply(this_band, shapefile_mask))
+    x_prev, y_prev = clipped_full_spectrum[0].shape
+    x_fixed, y_fixed = int(128 * np.ceil(x_prev / 128)), int(128 * np.ceil(y_prev / 128))
+    diff_x, diff_y = x_fixed - x_prev, y_fixed - y_prev
+    diff_x_before, diff_y_before = diff_x//2, diff_y//2
+    clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x-diff_x_before), (diff_y_before, diff_y-diff_y_before)], mode='constant')
+                                     for x in clipped_full_spectrum]
+    clipped_full_spectrum_stacked_image = np.dstack(clipped_full_spectrum_resized)
+    return clipped_full_spectrum_stacked_image
+
 
 def toTensor(**kwargs):
     image = kwargs['image']
@@ -32,12 +53,12 @@ def toTensor(**kwargs):
     return torch.from_numpy(image).float()
 
 
-def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_hot=False, batch_size=64, num_workers=4):
+def get_inference_loader(district, image_path, model_input_size=128, num_classes=3, one_hot=False, batch_size=64, num_workers=4):
 
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
-        def __init__(self, image_path, stride=model_input_size, bands=[2,3,4], transformation=None):
+        def __init__(self, image_path, stride=model_input_size, bands=[*range(1, 12)], transformation=None):
             super(dataset, self).__init__()
             self.model_input_size = model_input_size
             self.image_path = image_path
@@ -53,11 +74,12 @@ def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_ho
             os.mkdir(self.temp_dir)
             print('LOG: Generating data map now...')
             image_ds = gdal.Open(image_path, gdal.GA_ReadOnly)
-            all_raster_bands = [image_ds.GetRasterBand(x) for x in bands]
-            cols, rows = image_ds.RasterXSize, image_ds.RasterYSize
-            test_image = np.nan_to_num(all_raster_bands[0].ReadAsArray())
-            for band in all_raster_bands[1:]:
-                test_image = np.dstack((test_image, np.nan_to_num(band.ReadAsArray())))
+            all_raster_bands = [image_ds.GetRasterBand(x).ReadAsArray() for x in bands]
+            # test_image = np.nan_to_num(all_raster_bands[0].ReadAsArray())
+            # for band in all_raster_bands[1:]:
+            #     test_image = np.dstack((test_image, np.nan_to_num(band.ReadAsArray())))
+            # mask the image and adjust its size at this point
+            test_image = mask_landsat8_image_using_rasterized_shapefile(district=district, this_landsat8_bands_list=all_raster_bands)
             temp_image_path = os.path.join(self.temp_dir, 'temp_image.npy')
             np.save(temp_image_path, test_image)
             self.temp_test_image = np.load(temp_image_path, mmap_mode='r')
@@ -73,7 +95,7 @@ def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_ho
 
         def __getitem__(self, k):
             (this_row, this_col) = self.all_images[k]
-            this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
+            this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
             # get more indices to add to the example
             # ndvi_band = (this_example_subset[:, :, 4] -
             #              this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
@@ -132,7 +154,7 @@ def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_ho
     transformation = None
     ######################################################################################
     # create dataset class instances
-    inference_data = dataset(image_path=image_path, transformation=transformation)
+    inference_data = dataset(image_path=image_path, bands=[*range(1, 12)], transformation=transformation)
     print('LOG: inference_data ->', len(inference_data))
     inference_loader = DataLoader(dataset=inference_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     return inference_loader
@@ -140,7 +162,7 @@ def get_inference_loader(image_path, model_input_size=128, num_classes=3, one_ho
 
 @torch.no_grad()
 def run_inference(args):
-    model = UNet(input_channels=11, num_classes=3)
+    model = UNet(input_channels=3, num_classes=3)
     model.load_state_dict(torch.load(args.model_path), strict=False) # map_location='cpu'), strict=False)
     print('Log: Loaded pretrained {}'.format(args.model_path))
     model.eval()
@@ -155,8 +177,8 @@ def run_inference(args):
         for year in years:
             print("(LOG): On District: {} @ Year: {}".format(district, year))
             test_image_path = os.path.join(args.dir_path, 'clipped_{}_{}.tif'.format(district, year))
-            inference_loader = get_inference_loader(image_path=test_image_path, model_input_size=128, num_classes=3, one_hot=True, batch_size=args.bs,
-                                                    num_workers=4)
+            inference_loader = get_inference_loader(district=district, image_path=test_image_path, model_input_size=128, num_classes=3, one_hot=True,
+                                                    batch_size=args.bs, num_workers=4)
             # we need to fill our new generated test image
             generated_map = np.empty(shape=inference_loader.dataset.get_image_size())
             for idx, data in enumerate(inference_loader):

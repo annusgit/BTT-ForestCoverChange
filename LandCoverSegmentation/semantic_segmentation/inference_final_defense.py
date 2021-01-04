@@ -205,7 +205,7 @@ def run_inference(args):
             forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
             save_this_map_path = os.path.join(args.dest, '{}_{}.png'.format(district, year))
             matimg.imsave(save_this_map_path, forest_map_for_visualization)
-            print('Saved: {}'.format(save_this_map_path))
+            print('Saved: {} @ {}'.format(save_this_map_path, forest_map_for_visualization.shape))
             # save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(district, year))
             # np.save(save_path, generated_map)
             #########################################################################################3

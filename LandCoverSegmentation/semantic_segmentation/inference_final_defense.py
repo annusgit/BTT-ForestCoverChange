@@ -60,7 +60,7 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
-        def __init__(self, image_path, stride=model_input_size, bands=[*range(1, 12)], transformation=None):
+        def __init__(self, image_path, bands, stride=model_input_size, transformation=None):
             super(dataset, self).__init__()
             self.model_input_size = model_input_size
             self.image_path = image_path
@@ -156,7 +156,7 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
     transformation = None
     ######################################################################################
     # create dataset class instances
-    inference_data = dataset(image_path=image_path, bands=[*range(1, 12)], transformation=transformation)
+    inference_data = dataset(image_path=image_path, bands=[x for x in range(1, 12)], transformation=transformation)
     print('LOG: inference_data ->', len(inference_data))
     inference_loader = DataLoader(dataset=inference_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     return inference_loader

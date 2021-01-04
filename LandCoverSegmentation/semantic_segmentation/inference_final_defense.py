@@ -174,9 +174,9 @@ def run_inference(args):
         model.cuda(device=args.device)
     all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
                      "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    years = [2014] #, 2016, 2017, 2018, 2019, 2020]
+    years = [2014, 2016, 2017, 2018, 2019, 2020]
     # change this to do this for all the images in that directory
-    for district in ['abbottabad']:
+    for district in all_districts:
         for year in years:
             print("(LOG): On District: {} @ Year: {}".format(district, year))
             test_image_path = os.path.join(args.dir_path, 'landsat8_4326_30_{}_region_{}.tif'.format(year, district))

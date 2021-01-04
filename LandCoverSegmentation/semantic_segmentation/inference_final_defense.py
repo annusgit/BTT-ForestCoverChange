@@ -21,7 +21,7 @@ import pickle as pkl
 from loss import FocalLoss2d
 from model import UNet
 
-rasterized_shapefiles_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\District_Shapefiles_as_Clipping_bands\\"
+rasterized_shapefiles_path = "/home/azulfiqar_bee15seecs/District_Shapefiles_as_Clipping_bands/"
 
 
 def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands_list):

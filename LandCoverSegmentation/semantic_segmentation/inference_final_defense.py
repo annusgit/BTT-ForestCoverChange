@@ -42,6 +42,7 @@ def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands
     clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x-diff_x_before), (diff_y_before, diff_y-diff_y_before)], mode='constant')
                                      for x in clipped_full_spectrum]
     clipped_full_spectrum_stacked_image = np.dstack(clipped_full_spectrum_resized)
+    print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_stacked_image.shape))
     return clipped_full_spectrum_stacked_image
 
 
@@ -175,7 +176,7 @@ def run_inference(args):
                      "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
     years = [2014] #, 2016, 2017, 2018, 2019, 2020]
     # change this to do this for all the images in that directory
-    for district in all_districts:
+    for district in ['abbottabad']:
         for year in years:
             print("(LOG): On District: {} @ Year: {}".format(district, year))
             test_image_path = os.path.join(args.dir_path, 'landsat8_4326_30_{}_region_{}.tif'.format(year, district))

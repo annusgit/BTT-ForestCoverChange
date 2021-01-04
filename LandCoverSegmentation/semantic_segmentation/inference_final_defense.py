@@ -89,8 +89,8 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
             row_limit = self.temp_test_image.shape[0] - model_input_size
             col_limit = self.temp_test_image.shape[1] - model_input_size
             test_image, image_ds, all_raster_bands = [None] * 3  # release memory
-            for i in range(0, row_limit, self.stride):
-                for j in range(0, col_limit, self.stride):
+            for i in range(0, row_limit+1, self.stride):
+                for j in range(0, col_limit+1, self.stride):
                     self.all_images.append((i, j))
                     self.total_images += 1
             self.shape = [i+self.stride, j+self.stride]

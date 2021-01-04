@@ -15,6 +15,7 @@ np.random.seed(int(time.time()))
 random.seed(int(time.time()))
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
+import matplotlib.image as matimg
 from torchvision import transforms
 import torchnet as tnt
 import pickle as pkl
@@ -22,6 +23,7 @@ from loss import FocalLoss2d
 from model import UNet
 
 rasterized_shapefiles_path = "/home/azulfiqar_bee15seecs/District_Shapefiles_as_Clipping_bands/"
+FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
 
 
 def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands_list):
@@ -193,8 +195,18 @@ def run_inference(args):
                     x, x_, y, y_ = coordinates[k]
                     generated_map[x:x_, y:y_] = pred_numpy[:,:,k]
 
-            save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(district, year))
-            np.save(save_path, generated_map)
+            # save generated map as png image, not numpy array
+            forest_map_rband = np.zeros_like(generated_map)
+            forest_map_gband = np.zeros_like(generated_map)
+            forest_map_bband = np.zeros_like(generated_map)
+            forest_map_rband[generated_map == NON_FOREST_LABEL] = 255
+            forest_map_gband[generated_map == FOREST_LABEL] = 255
+            forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
+            save_this_map_path = os.path.join(args.dest, f'{district}_{year}.png')
+            matimg.imsave(save_this_map_path, forest_map_for_visualization)
+            print('Saved: {}'.format(save_this_map_path))
+            # save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(district, year))
+            # np.save(save_path, generated_map)
             #########################################################################################3
             inference_loader.dataset.clear_mem()
             pass

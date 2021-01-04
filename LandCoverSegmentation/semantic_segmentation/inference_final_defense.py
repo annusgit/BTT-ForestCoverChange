@@ -27,7 +27,7 @@ FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
 
 
 def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands_list):
-    this_shapefile_path = os.path.join(rasterized_shapefiles_path, f"{district}_shapefile.tif")
+    this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
     ds = gdal.Open(this_shapefile_path)
     assert ds.RasterCount == 1
     shapefile_mask = np.array(ds.GetRasterBand(1).ReadAsArray(), dtype=np.uint8)

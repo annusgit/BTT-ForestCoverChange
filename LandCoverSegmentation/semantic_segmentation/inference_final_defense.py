@@ -178,7 +178,7 @@ def run_inference(args):
     for district in all_districts:
         for year in years:
             print("(LOG): On District: {} @ Year: {}".format(district, year))
-            test_image_path = os.path.join(args.dir_path, ' landsat8_4326_30_{}_region_{}.tif'.format(year, district))
+            test_image_path = os.path.join(args.dir_path, 'landsat8_4326_30_{}_region_{}.tif'.format(year, district))
             inference_loader = get_inference_loader(district=district, image_path=test_image_path, model_input_size=128, num_classes=3, one_hot=True,
                                                     batch_size=args.bs, num_workers=4)
             # we need to fill our new generated test image

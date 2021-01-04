@@ -173,7 +173,7 @@ def run_inference(args):
         model.cuda(device=args.device)
     all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
                      "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    years = [2014, 2016, 2017, 2018, 2019, 2020]
+    years = [2014] #, 2016, 2017, 2018, 2019, 2020]
     # change this to do this for all the images in that directory
     for district in all_districts:
         for year in years:

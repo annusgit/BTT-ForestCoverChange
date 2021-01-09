@@ -17,6 +17,9 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import torchnet as tnt
 from torchnet.meter import ConfusionMeter as CM
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 
 def train_net(model, generated_data_path, input_dim, workers, pre_model, save_data, save_dir, sum_dir, batch_size, lr, epochs, log_after, cuda, device):
@@ -132,6 +135,8 @@ def eval_net(**kwargs):
     device = kwargs['device']
     model = kwargs['model']
     model.eval()
+    all_predictions = np.array([])  # empty all predictions
+    all_ground_truth = np.array([])
     if cuda:
         model.cuda(device=device)
     if 'writer' in kwargs.keys():
@@ -161,6 +166,8 @@ def eval_net(**kwargs):
             net_loss.append(loss.item())
             un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
             confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
+            all_predictions = np.concatenate((all_predictions, pred.view(-1)), axis=0)
+            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1)), axis=0)
             #################################
         mean_accuracy = total_correct*100/total_examples
         mean_loss = np.asarray(net_loss).mean()
@@ -170,6 +177,11 @@ def eval_net(**kwargs):
         print('LOG: validation: total loss = {:.5f}, total accuracy = ({}/{}) = {:.5f}%'.format(mean_loss, total_correct, total_examples, mean_accuracy))
         print('Log: Confusion matrix')
         print(confusion_meter.value())
+        confusion = confusion_matrix(all_ground_truth, all_predictions)
+        print('Confusion Matrix from Scikit-Learn\n')
+        print(confusion)
+        print('\nClassification Report\n')
+        print(classification_report(all_ground_truth, all_predictions, target_names=['Null-Pixels', 'Non-Forest', 'Forest']))
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
         return mean_accuracy
 
@@ -218,7 +230,7 @@ def eval_net(**kwargs):
             # dice_criterion(softmaxed, label) # +
             # print(softmaxed.shape, label.shape)
             # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
-            loss = focal_criterion(softmaxed, not_one_hot_target) # dice_criterion(softmaxed, label) #
+            loss = focal_criterion(softmaxed, not_one_hot_target)  # dice_criterion(softmaxed, label) #
             accurate = (pred == not_one_hot_target).sum().item()
             numerator = float(accurate)
             denominator = float(pred.view(-1).size(0))  # test_x.size(0)*dimension**2)
@@ -227,6 +239,8 @@ def eval_net(**kwargs):
             net_loss.append(loss.item())
             un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
             confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
+            all_predictions = np.concatenate((all_predictions, pred.view(-1)), axis=0)
+            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1)), axis=0)
             if idx % 10 == 0:
                 print('log: on {}'.format(idx))
             #################################
@@ -237,6 +251,11 @@ def eval_net(**kwargs):
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
         print('---> Confusion Matrix:')
         print(confusion_meter.value())
+        confusion = confusion_matrix(all_ground_truth, all_predictions)
+        print('Confusion Matrix from Scikit-Learn\n')
+        print(confusion)
+        print('\nClassification Report\n')
+        print(classification_report(all_ground_truth, all_predictions, target_names=['Null-Pixels', 'Non-Forest', 'Forest']))
         with open('normalized.pkl', 'wb') as this:
             pkl.dump(confusion_meter.value(), this, protocol=pkl.HIGHEST_PROTOCOL)
         with open('un_normalized.pkl', 'wb') as this:

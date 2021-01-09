@@ -166,8 +166,8 @@ def eval_net(**kwargs):
             net_loss.append(loss.item())
             un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
             confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            all_predictions = np.concatenate((all_predictions, pred.view(-1)), axis=0)
-            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1)), axis=0)
+            all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
+            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
             #################################
         mean_accuracy = total_correct*100/total_examples
         mean_loss = np.asarray(net_loss).mean()
@@ -239,8 +239,8 @@ def eval_net(**kwargs):
             net_loss.append(loss.item())
             un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
             confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            all_predictions = np.concatenate((all_predictions, pred.view(-1)), axis=0)
-            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1)), axis=0)
+            all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
+            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
             if idx % 10 == 0:
                 print('log: on {}'.format(idx))
             #################################

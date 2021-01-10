@@ -45,8 +45,8 @@ if __name__ == "__main__":
     # model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
 
     raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
-    processed_dataset_path = "/home/azulfiqar_bee15seecs/statistical_models_dataset/1M_dataset.pkl"
-    model_path = "/home/azulfiqar_bee15seecs/statistical_models_dataset/logistic_regressor.pkl"
+    processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
+    model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
 
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
     classifiers = {
@@ -96,9 +96,9 @@ if __name__ == "__main__":
                 sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr2_band, axis=1)), axis=1)
             datapoints_as_array = np.concatenate((datapoints_as_array, sample_datapoint), axis=0)
             labels_as_array = np.concatenate((labels_as_array, sample_label), axis=0)
-            # at this point, we just serialize the arrays and save them
-            with open(processed_dataset_path, 'wb') as processed_dataset:
-                cPickle.dump((datapoints_as_array, labels_as_array), processed_dataset)
+        # at this point, we just serialize the arrays and save them
+        with open(processed_dataset_path, 'wb') as processed_dataset:
+            cPickle.dump((datapoints_as_array, labels_as_array), processed_dataset)
         print("(LOG): Dataset Size: Datapoints = {}; Ground Truth Labels {}".format(datapoints_as_array.shape, labels_as_array.shape))
         print("(LOG): Compiled and Serialized New Dataset Successfully!")
         pass

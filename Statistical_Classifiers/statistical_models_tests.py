@@ -62,7 +62,7 @@ if __name__ == "__main__":
         print("(LOG): Found Precompiled Serialized Dataset...")
         with open(processed_dataset_path, 'rb') as processed_dataset:
             (datapoints_as_array, labels_as_array) = cPickle.load(processed_dataset)
-        print(f"(LOG): Dataset Size: Datapoints = {datapoints_as_array.shape}; Ground Truth Labels {labels_as_array.shape}")
+        print("(LOG): Dataset Size: Datapoints = {}; Ground Truth Labels {}".format(datapoints_as_array.shape, labels_as_array.shape))
         print("(LOG): Loaded Precompiled Serialized Dataset Successfully!")
     else:
         print("(LOG): No Precompiled Dataset Found! Creating New Dataset Now...")
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         np.random.seed(0)
         for idx, this_pickled_file in enumerate(all_pickle_files_in_pickled_dataset):
             if idx % 100 == 0:
-                print(f"(LOG): Processing ({idx}/{len(all_pickle_files_in_pickled_dataset)}) => {this_pickled_file}")
+                print("(LOG): Processing ({}/{}) => {}".format(idx, len(all_pickle_files_in_pickled_dataset), this_pickled_file))
             with open(this_pickled_file, 'rb') as this_small_data_sample:
                 small_image_sample, small_label_sample = cPickle.load(this_small_data_sample)
                 this_shape = small_image_sample.shape
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             # at this point, we just serialize the arrays and save them
             with open(processed_dataset_path, 'wb') as processed_dataset:
                 cPickle.dump((datapoints_as_array, labels_as_array), processed_dataset)
-        print(f"(LOG): Dataset Size: Datapoints = {datapoints_as_array.shape}; Ground Truth Labels {labels_as_array.shape}")
+        print("(LOG): Dataset Size: Datapoints = {}; Ground Truth Labels {}".format(datapoints_as_array.shape, labels_as_array.shape))
         print("(LOG): Compiled and Serialized New Dataset Successfully!")
         pass
     # create training and testing arrays from loaded data
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     x_train, y_train = datapoints_as_array[:split], labels_as_array[:split].astype(np.uint8)
     x_test, y_test = datapoints_as_array[split:], labels_as_array[split:].astype(np.uint8)
     print("(LOG): Dataset for Training and Testing Prepared")
-    print(f"(LOG): Training Data: {x_train.shape}; Testing Data: {x_test.shape}")
+    print("(LOG): Training Data: {}; Testing Data: {}".format(x_train.shape, x_test.shape))
     # call model for training
     trained_classifier = train_and_test_statistical_model(name="LogisticRegression", classifier=classifiers["LogisticRegression"],
                                                           x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)

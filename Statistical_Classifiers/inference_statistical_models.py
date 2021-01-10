@@ -14,7 +14,6 @@ import numpy as np
 import _pickle as cPickle
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.image as matimg
-from model import UNet
 np.random.seed(int(time.time()))
 random.seed(int(time.time()))
 

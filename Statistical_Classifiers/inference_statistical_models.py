@@ -135,7 +135,7 @@ def run_inference(args):
             generated_map = np.empty(shape=inference_loader.dataset.get_image_size())
             for idx, data in enumerate(inference_loader):
                 coordinates, test_x = data['coordinates'].tolist(), data['input']
-                test_x = test_x.numpy().transpose(1,2,0)
+                # test_x = test_x.numpy().transpose(1,2,0)
                 pred_numpy = trained_classifier.predict(test_x.reshape(-1)).reshape(test_x.shape)
                 if idx % 5 == 0:
                     print('LOG: on {} of {}'.format(idx, len(inference_loader)))

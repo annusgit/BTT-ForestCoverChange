@@ -145,7 +145,7 @@ def run_inference(args):
                     print('LOG: on {} of {}'.format(idx, len(inference_loader)))
                 for k in range(test_x.shape[0]):
                     x, x_, y, y_ = coordinates[k]
-                    generated_map[x:x_, y:y_] = pred_numpy[:,:,k]
+                    generated_map[x:x_, y:y_] = pred_numpy[k,:,:]
             # save generated map as png image, not numpy array
             forest_map_rband = np.zeros_like(generated_map)
             forest_map_gband = np.zeros_like(generated_map)

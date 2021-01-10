@@ -11,7 +11,7 @@ import shutil
 import random
 import argparse
 import numpy as np
-import _pickle as cPickle
+import pickle as cPickle
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.image as matimg
 np.random.seed(int(time.time()))
@@ -144,6 +144,7 @@ def run_inference(args):
             # np.save(save_path, generated_map)
             #########################################################################################3
             inference_loader.dataset.clear_mem()
+            break
             pass
         pass
     pass

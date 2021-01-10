@@ -41,6 +41,16 @@ def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands
     return clipped_full_spectrum_stacked_image
 
 
+def toTensor(**kwargs):
+    image = kwargs['image']
+    'will convert image and label from numpy to torch tensor'
+    # swap color axis because
+    # numpy image: H x W x C
+    # torch image: C X H X W
+    image = image.transpose((2, 0, 1))
+    return torch.from_numpy(image).float()
+
+
 def get_inference_loader(district, image_path, model_input_size=128, num_classes=3, one_hot=False, batch_size=64, num_workers=4):
 
     # This function is faster because we have already saved our data as subset pickle files
@@ -81,6 +91,7 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
         def __getitem__(self, k):
             (this_row, this_col) = self.all_images[k]
             this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
+            this_example_subset = toTensor(image=this_example_subset)
             return {'coordinates': np.asarray([this_row, this_row + self.model_input_size, this_col, this_col + self.model_input_size]),
                     'input': this_example_subset}
 
@@ -124,6 +135,7 @@ def run_inference(args):
             generated_map = np.empty(shape=inference_loader.dataset.get_image_size())
             for idx, data in enumerate(inference_loader):
                 coordinates, test_x = data['coordinates'].tolist(), data['input']
+                test_x = test_x.numpy().transpose(1,2,0)
                 pred_numpy = trained_classifier.predict(test_x.reshape(-1)).reshape(test_x.shape)
                 if idx % 5 == 0:
                     print('LOG: on {} of {}'.format(idx, len(inference_loader)))

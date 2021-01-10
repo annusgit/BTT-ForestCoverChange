@@ -40,13 +40,13 @@ def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test,
 
 
 if __name__ == "__main__":
-    # raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
-    # processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\1M_dataset.pkl"
-    # model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
+    raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
+    processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\1M_dataset.pkl"
+    model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
 
-    raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
-    processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
-    model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
+    # raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
+    # processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
+    # model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
 
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
     classifiers = {
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     trained_classifier = train_and_test_statistical_model(name="LogisticRegression", classifier=classifiers["LogisticRegression"],
                                                           x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
     with open(model_path, 'wb') as model_file:
-        cPickle.dump(trained_classifier, model_file)
+        print(cPickle.dump(trained_classifier, model_file, protocol=2))
     print("(LOG): Saved Trained Classifier as {}".format(model_path))
 
     # basic test

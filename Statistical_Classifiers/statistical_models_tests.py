@@ -12,7 +12,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
 
-def run(classifier):
+def run(name, classifier):
     # load a test dataset and split it
     dataset = load_wine()
     X, Y = dataset.data, dataset.target
@@ -24,6 +24,7 @@ def run(classifier):
     # get confusion matrix
     confusion_matrix_to_print = confusion_matrix(y_test, y_pred)
     # show confusion matrix and classification report for precision, recall, F1-score
+    print("################################ {} ################################".format(name))
     print('Confusion Matrix\n')
     print(confusion_matrix_to_print)
     print('\nClassification Report\n')
@@ -33,4 +34,14 @@ def run(classifier):
 
 if __name__ == "__main__":
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
-    run(classifier=Perceptron())
+    classifiers = {
+        "SVC": SVC(),
+        "Perceptron": Perceptron(),
+        "GaussianNB": GaussianNB(),
+        "LogisticRegression": LogisticRegression(),
+        "DecisionTreeClassifier": DecisionTreeClassifier(),
+        "RandomForestClassifier": RandomForestClassifier(),
+    }
+    for name, this_classifier in classifiers.items():
+        run(name=name, classifier=this_classifier)
+        break

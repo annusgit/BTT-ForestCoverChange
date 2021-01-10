@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "SVC": SVC(verbose=1),
         "Perceptron": Perceptron(verbose=1, n_jobs=4),
         "GaussianNB": GaussianNB(),
-        "LogisticRegression": LogisticRegression(verbose=1, n_jobs=4, max_iter=1000),
+        "LogisticRegression": LogisticRegression(verbose=1, n_jobs=4, max_iter=1000, solver='lbfgs'),
         "DecisionTreeClassifier": DecisionTreeClassifier(),
         "RandomForestClassifier": RandomForestClassifier(verbose=1, n_jobs=4),
     }

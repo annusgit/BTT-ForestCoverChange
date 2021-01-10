@@ -137,7 +137,9 @@ def run_inference(args):
                 coordinates, test_x = data['coordinates'].tolist(), data['input']
                 print(test_x.shape)
                 # test_x = test_x.numpy().transpose(1,2,0)
-                pred_numpy = trained_classifier.predict(test_x.reshape(-1, 11)).reshape((64, 128, 128))
+                pred_numpy = trained_classifier.predict(test_x.reshape(-1, 11))
+                print(pred_numpy.shape)
+                pred_numpy = pred_numpy.reshape((64, 128, 128))
                 if idx % 5 == 0:
                     print('LOG: on {} of {}'.format(idx, len(inference_loader)))
                 for k in range(test_x.shape[0]):

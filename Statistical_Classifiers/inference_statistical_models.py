@@ -159,7 +159,6 @@ def run_inference(args):
             # np.save(save_path, generated_map)
             #########################################################################################3
             inference_loader.dataset.clear_mem()
-            return
             pass
         pass
     pass

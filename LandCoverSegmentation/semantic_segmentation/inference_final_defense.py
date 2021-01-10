@@ -98,7 +98,7 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
 
         def __getitem__(self, k):
             (this_row, this_col) = self.all_images[k]
-            this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
+            this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
             # get more indices to add to the example
             # ndvi_band = (this_example_subset[:, :, 4] -
             #              this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
@@ -165,7 +165,7 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
 
 @torch.no_grad()
 def run_inference(args):
-    model = UNet(input_channels=3, num_classes=3)
+    model = UNet(input_channels=11, num_classes=3)
     model.load_state_dict(torch.load(args.model_path), strict=False) # map_location='cpu'), strict=False)
     print('Log: Loaded pretrained {}'.format(args.model_path))
     model.eval()

@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.datasets import load_wine
 import matplotlib.pyplot as plt
 from datetime import datetime
-import _pickle as cPickle
+import pickle as cPickle
 import numpy as np
 import random
 import time

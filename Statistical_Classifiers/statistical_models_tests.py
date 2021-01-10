@@ -69,7 +69,7 @@ if __name__ == "__main__":
         all_pickle_files_in_pickled_dataset = [os.path.join(raw_dataset_path, x) for x in os.listdir(raw_dataset_path)]
         datapoints_as_array, labels_as_array = np.empty(shape=[1,11]), np.empty(shape=[1,])
         # random.seed(datetime.now())
-        np.random.seed(0)
+        np.random.seed(232)
         for idx, this_pickled_file in enumerate(all_pickle_files_in_pickled_dataset):
             if idx % 100 == 0:
                 print("(LOG): Processing ({}/{}) => {}".format(idx, len(all_pickle_files_in_pickled_dataset), this_pickled_file))

@@ -47,7 +47,7 @@ def toTensor(**kwargs):
     # swap color axis because
     # numpy image: H x W x C
     # torch image: C X H X W
-    image = image.transpose((2, 0, 1))
+    # image = image.transpose((2, 0, 1))
     return torch.from_numpy(image).float()
 
 
@@ -137,7 +137,7 @@ def run_inference(args):
                 coordinates, test_x = data['coordinates'].tolist(), data['input']
                 # print(test_x.shape)
                 # test_x = test_x.numpy().transpose(1,2,0)
-                pred_numpy = trained_classifier.predict(test_x.reshape(-1, 11)).reshape((test_x.shape[0], test_x.shape[2], test_x.shape[3])).transpose(1,2,0)
+                pred_numpy = trained_classifier.predict(test_x.reshape(-1, 11)).reshape((test_x.shape[0], test_x.shape[2], test_x.shape[3]))
                 if idx % 5 == 0:
                     print('LOG: on {} of {}'.format(idx, len(inference_loader)))
                 for k in range(test_x.shape[0]):

@@ -48,7 +48,7 @@ def toTensor(**kwargs):
     # numpy image: H x W x C
     # torch image: C X H X W
     # image = image.transpose((2, 0, 1))
-    return torch.from_numpy(image).float()
+    return torch.from_numpy(np.nan_to_num(image)).float()
 
 
 def get_inference_loader(district, image_path, model_input_size=128, num_classes=3, one_hot=False, batch_size=64, num_workers=4):
@@ -121,7 +121,8 @@ def run_inference(args):
     with open(args.model_path, 'rb') as model_file:
         trained_classifier = cPickle.load(model_file)
     print('Log: Loaded pretrained from {}'.format(args.model_path))
-    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+    # "abbottabad", "battagram", "buner", "chitral", "hangu", "haripur",
+    all_districts = ["karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
                      "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
     years = [2014, 2016, 2017, 2018, 2019, 2020]
     # change this to do this for all the images in that directory

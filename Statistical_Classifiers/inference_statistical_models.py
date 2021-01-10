@@ -140,6 +140,7 @@ def run_inference(args):
                 pred_numpy = trained_classifier.predict(test_x.reshape(-1, 11))
                 print(pred_numpy.shape)
                 pred_numpy = pred_numpy.reshape((64, 128, 128))
+                print(pred_numpy.shape)
                 if idx % 5 == 0:
                     print('LOG: on {} of {}'.format(idx, len(inference_loader)))
                 for k in range(test_x.shape[0]):

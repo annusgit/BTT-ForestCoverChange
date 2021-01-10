@@ -67,7 +67,7 @@ if __name__ == "__main__":
     else:
         print("(LOG): No Precompiled Dataset Found! Creating New Dataset Now...")
         all_pickle_files_in_pickled_dataset = [os.path.join(raw_dataset_path, x) for x in os.listdir(raw_dataset_path)]
-        datapoints_as_array, labels_as_array = np.empty(shape=[1,18]), np.empty(shape=[1,])
+        datapoints_as_array, labels_as_array = np.empty(shape=[1,11]), np.empty(shape=[1,])
         # random.seed(datetime.now())
         np.random.seed(0)
         for idx, this_pickled_file in enumerate(all_pickle_files_in_pickled_dataset):
@@ -79,21 +79,22 @@ if __name__ == "__main__":
                 random_rows, random_cols = np.random.randint(0, this_shape[0], size=606), np.random.randint(0, this_shape[0], size=606)
                 sample_datapoint = small_image_sample[random_rows, random_cols, :]
                 sample_label = small_label_sample[random_rows, random_cols]
-                # get more indices to add to the example, landsat-8
-                ndvi_band = (sample_datapoint[:, 4]-sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + sample_datapoint[:, 3] + 1e-7)
-                evi_band = 2.5 * (sample_datapoint[:, 4] - sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + 6 * sample_datapoint[:, 3] - 7.5 * sample_datapoint[:, 1] + 1)
-                savi_band = 1.5 * (sample_datapoint[:, 4] - sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + sample_datapoint[:, 3] + 0.5)
-                msavi_band = 0.5 * (2 * sample_datapoint[:, 4] + 1 - np.sqrt((2 * sample_datapoint[:, 4] + 1) ** 2 - 8 * (sample_datapoint[:, 4] - sample_datapoint[:, 3])))
-                ndmi_band = (sample_datapoint[:, 4] - sample_datapoint[:, 5]) / (sample_datapoint[:, 4] + sample_datapoint[:, 5] + 1e-7)
-                nbr_band = (sample_datapoint[:, 4] - sample_datapoint[:, 6]) / (sample_datapoint[:, 4] + sample_datapoint[:, 6] + 1e-7)
-                nbr2_band = (sample_datapoint[:, 5] - sample_datapoint[:, 6]) / (sample_datapoint[:, 5] + sample_datapoint[:, 6] + 1e-7)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(ndvi_band, axis=1)), axis=1)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(evi_band, axis=1)), axis=1)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(savi_band, axis=1)), axis=1)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(msavi_band, axis=1)), axis=1)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(ndmi_band, axis=1)), axis=1)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr_band, axis=1)), axis=1)
-                sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr2_band, axis=1)), axis=1)
+                # apply the following code if you want 18 bands in your sample points
+                # # get more indices to add to the example, landsat-8
+                # ndvi_band = (sample_datapoint[:, 4]-sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + sample_datapoint[:, 3] + 1e-7)
+                # evi_band = 2.5 * (sample_datapoint[:, 4] - sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + 6 * sample_datapoint[:, 3] - 7.5 * sample_datapoint[:, 1] + 1)
+                # savi_band = 1.5 * (sample_datapoint[:, 4] - sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + sample_datapoint[:, 3] + 0.5)
+                # msavi_band = 0.5 * (2 * sample_datapoint[:, 4] + 1 - np.sqrt((2 * sample_datapoint[:, 4] + 1) ** 2 - 8 * (sample_datapoint[:, 4] - sample_datapoint[:, 3])))
+                # ndmi_band = (sample_datapoint[:, 4] - sample_datapoint[:, 5]) / (sample_datapoint[:, 4] + sample_datapoint[:, 5] + 1e-7)
+                # nbr_band = (sample_datapoint[:, 4] - sample_datapoint[:, 6]) / (sample_datapoint[:, 4] + sample_datapoint[:, 6] + 1e-7)
+                # nbr2_band = (sample_datapoint[:, 5] - sample_datapoint[:, 6]) / (sample_datapoint[:, 5] + sample_datapoint[:, 6] + 1e-7)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(ndvi_band, axis=1)), axis=1)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(evi_band, axis=1)), axis=1)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(savi_band, axis=1)), axis=1)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(msavi_band, axis=1)), axis=1)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(ndmi_band, axis=1)), axis=1)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr_band, axis=1)), axis=1)
+                # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr2_band, axis=1)), axis=1)
             datapoints_as_array = np.concatenate((datapoints_as_array, sample_datapoint), axis=0)
             labels_as_array = np.concatenate((labels_as_array, sample_label), axis=0)
         # at this point, we just serialize the arrays and save them

@@ -53,12 +53,12 @@ if __name__ == "__main__":
     #     # fig.show()
     #     # exit()
     # raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
-    # processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\1M_dataset.pkl"
+    # processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\100k_dataset.pkl"
     # model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
 
     raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
     processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
-    model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
+    model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/random_forest.pkl"
 
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
     classifiers = {

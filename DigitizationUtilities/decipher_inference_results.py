@@ -61,24 +61,25 @@ if __name__ == "__main__":
     all_years = [2014, 2015, 2016, 2017, 2018, 2019, 2020]
     infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\rgb"
     # infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\full-spectrum"
+    # infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\statistical_models_logistic_regression"
     if do_work:
         for district in all_districts:
-            fig, axs = plt.subplots(1, len(all_years))
-            fig.suptitle(f'{district}', fontsize=16)
-            col_count = 0
+            # fig, axs = plt.subplots(1, len(all_years))
+            # fig.suptitle(f'{district}', fontsize=16)
+            # col_count = 0
             for year in all_years:
                 forest_percentage, forest_map = decipher_this_png_map(this_image_path=os.path.join(infered_png_maps_path, "{}_{}.png".format(district, year)))
                 print("District: {}; Year: {}; Size: {}; Forest Percentage: {:.2f}%".format(district, year, forest_map.shape, forest_percentage))
                 BTT_Forest_Percentages[district][year] = forest_percentage
                 # visualize the maps
-                axs[col_count].imshow(forest_map)
-                axs[col_count].set_title("{} @ {:.2f}%".format(year, BTT_Forest_Percentages[district][year]))
-                axs[col_count].axis('off')
-                col_count += 1
+                # axs[col_count].imshow(forest_map)
+                # axs[col_count].set_title("{} @ {:.2f}%".format(year, BTT_Forest_Percentages[district][year]))
+                # axs[col_count].axis('off')
+                # col_count += 1
                 pass
-            mng = plt.get_current_fig_manager()
-            mng.window.state('zoomed')
-            plt.show()
+            # mng = plt.get_current_fig_manager()
+            # mng.window.state('zoomed')
+            # plt.show()
             pass
     if show_forest_change_trend:
         fig = go.Figure()

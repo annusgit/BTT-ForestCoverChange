@@ -91,7 +91,7 @@ if __name__ == "__main__":
         "upper_dir":    [186935]
     }
     path_1, path_2 = "E:\\Forest Cover - Redo 2020\\", "Resized_Clipped_Adjusted_Maps"
-    destination_path = "E:\\Forest Cover - Redo 2020\\Resized_Clipped_Adjusted_Colored_Lablelled_2015_Maps"
+    destination_path = "E:\\Forest Cover - Redo 2020\\Resized_Clipped_Adjusted_Colored_Labelled_2015_Maps"
     all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
                      "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
     for district in all_districts:
@@ -135,16 +135,16 @@ if __name__ == "__main__":
         mng = plt.get_current_fig_manager()
         mng.window.state('zoomed')  # works fine on Windows!
         plt.show()
-        forest_map_rband = np.zeros_like(forest_map)
-        forest_map_gband = np.zeros_like(forest_map)
-        forest_map_bband = np.zeros_like(forest_map)
-        forest_map_rband[forest_map == non_forest_label] = 255
-        forest_map_gband[forest_map == forest_label] = 255
-        forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
-        matimg.imsave(os.path.join(destination_path, f'{district}_2015.png'), forest_map_for_visualization)
-        print('Saved: {}'.format(os.path.join(destination_path, f'{district}_2015.png')))
+        # forest_map_rband = np.zeros_like(forest_map)
+        # forest_map_gband = np.zeros_like(forest_map)
+        # forest_map_bband = np.zeros_like(forest_map)
+        # forest_map_rband[forest_map == non_forest_label] = 255
+        # forest_map_gband[forest_map == forest_label] = 255
+        # forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
+        # matimg.imsave(os.path.join(destination_path, f'{district}_2015.png'), forest_map_for_visualization)
+        # print('Saved: {}'.format(os.path.join(destination_path, f'{district}_2015.png')))
         pass
-    exit()
+    # exit()
     # data to plot
     # forest_percentages_by_districts = {'hangu': [6.56, 4.385070243239075], 'chitral': [9.71, 33.42828609053335], 'nowshehra': [12.2, 12.78935115378584],
     #                                    'karak': [14.85, 14.59616342204001], 'malakand': [15.9, 15.196281390945275], 'kohat': [20.03, 15.31498685770034],

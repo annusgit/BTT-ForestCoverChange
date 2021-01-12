@@ -52,13 +52,13 @@ if __name__ == "__main__":
     #     # fig.update_layout(height=17 * 200, width=1100, title_text="Forest Cover Change Trends")
     #     # fig.show()
     #     # exit()
-    raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
-    processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\1M_dataset.pkl"
-    model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
+    # raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
+    # processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\1M_dataset.pkl"
+    # model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
 
-    # raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
-    # processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
-    # model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
+    raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
+    processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
+    model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
 
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
     classifiers = {

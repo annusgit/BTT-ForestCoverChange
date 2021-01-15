@@ -48,7 +48,7 @@ def get_images_from_large_file(bands, year, region, stride):
     # data_directory_path = '/home/azulfiqar_bee15seecs/training_data/clipped_training_data/'
     data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
     image_path = os.path.join(data_directory_path, '{}_image.tif'.format(region))
-    label_path = os.path.join(data_directory_path, '{}_{}.tif'.format(region, year))
+    label_path = os.path.join(data_directory_path, 'landsat8_4326_30_{}_region_{}.tif'.format(year, region))
     destination_directory_path = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
     # destination = os.path.join(destination_directory_path, '{}'.format(year))
     destination = destination_directory_path

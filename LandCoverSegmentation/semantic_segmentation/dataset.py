@@ -419,6 +419,7 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                     with open(example_path, 'rb') as this_data:
                         _, label = pickle.load(this_data)
                         label = np.array(label)
+                        print(label.shape)
                         row_limit, col_limit = label.shape[0]-model_input_size, label.shape[1]-model_input_size
                         label = None  # clear memory
                         _ = None  # clear memory

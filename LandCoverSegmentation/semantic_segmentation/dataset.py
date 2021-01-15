@@ -592,7 +592,7 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
         # print(len(full_examples_list))
         train_split = int(train_split*len(full_examples_list))
         # print(train_split)
-        print("(DEBUG): ", full_examples_list)
+        # print("(DEBUG): ", full_examples_list)
         train_list = full_examples_list[:train_split]
         temp_list = full_examples_list[train_split:]
         eval_list = temp_list[0:len(temp_list)//2]

@@ -51,7 +51,7 @@ def decipher_this_png_map(this_image_path):
     this_map = np.zeros_like(red_band)
     this_map[green_band != 0] = FOREST_PIXEL
     this_map[red_band != 0] = NON_FOREST_PIXEL
-    return forest_pixel_count * 100 / (forest_pixel_count + non_forest_pixel_count), this_map
+    return forest_pixel_count * 100 / (forest_pixel_count + non_forest_pixel_count), this_map, map_png
 
 
 if __name__ == "__main__":
@@ -59,17 +59,23 @@ if __name__ == "__main__":
     all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
                      "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
     all_years = [2014, 2015, 2016, 2017, 2018, 2019, 2020]
-    infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\rgb"
+    # infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\rgb"
     # infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\full-spectrum"
-    # infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\statistical_models_logistic_regression"
+    # infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\statistical_models\\logistic regression"
+    infered_png_maps_path = "E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\statistical_models\\Random Forests"
+    # fig = make_subplots(rows=17, cols=7)
     if do_work:
-        for district in all_districts:
+        for k, district in enumerate(all_districts):
             # fig, axs = plt.subplots(1, len(all_years))
             # fig.suptitle(f'{district}', fontsize=16)
             # col_count = 0
-            for year in all_years:
-                forest_percentage, forest_map = decipher_this_png_map(this_image_path=os.path.join(infered_png_maps_path, "{}_{}.png".format(district, year)))
+            for i, year in enumerate(all_years):
+                forest_percentage, forest_map, map_png = decipher_this_png_map(this_image_path=os.path.join(infered_png_maps_path, "{}_{}.png".format(district,
+                                                                                                                                                      year)))
                 print("District: {}; Year: {}; Size: {}; Forest Percentage: {:.2f}%".format(district, year, forest_map.shape, forest_percentage))
+                # fig.add_trace(go.Image(z=map_png), k + 1, i + 1)
+                if year == 2015:
+                    continue
                 BTT_Forest_Percentages[district][year] = forest_percentage
                 # visualize the maps
                 # axs[col_count].imshow(forest_map)
@@ -81,6 +87,8 @@ if __name__ == "__main__":
             # mng.window.state('zoomed')
             # plt.show()
             pass
+    # fig.update_layout(height=17 * 200, width=1100, title_text="Logistic Regression Full-Spectrum Model - Forest Cover Change Trends")
+    # fig.show()
     if show_forest_change_trend:
         fig = go.Figure()
         for district in all_districts:
@@ -88,7 +96,7 @@ if __name__ == "__main__":
             fig.add_trace(go.Scatter(x=all_years, y=y, mode='lines+markers', name=f'{district}'))
         fig.add_trace(go.Scatter(x=all_years, y=[statistics.mean([BTT_Forest_Percentages[district][year] for district in all_districts]) for year in all_years],
                                  name='Average Trend', line=dict(color='royalblue', width=4, dash='dash')))
-        fig.update_layout(hovermode="x")
+        fig.update_layout(hovermode="x", title_text="Random Forests Full-Spectrum Model - Forest Cover Change Trend")
         fig.show()
     # images_path = 'E:\\Forest Cover - Redo 2020\\Digitized_Forest_Maps_2014_2020_png\\'
     # row_count, col_count = 0, 0

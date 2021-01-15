@@ -40,25 +40,13 @@ def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test,
 
 
 if __name__ == "__main__":
-    # from plotly.subplots import make_subplots
-    #     # import plotly.graph_objects as go
-    #     # from skimage import io
-    #     # img = io.imread('https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Crab_Nebula.jpg/240px-Crab_Nebula.jpg')
-    #     # fig = make_subplots(rows=17, cols=7)
-    #     # for k in range(17):
-    #     #     for i in range(7):
-    #     #         fig.add_trace(go.Image(z=img), k+1, i+1)
-    #     #         # fig.add_trace(go.Image(z=img), 1, 2)
-    #     # fig.update_layout(height=17 * 200, width=1100, title_text="Forest Cover Change Trends")
-    #     # fig.show()
-    #     # exit()
-    # raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
-    # processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\100k_dataset.pkl"
-    # model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
+    raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
+    processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\100k_dataset.pkl"
+    model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
 
-    raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
-    processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
-    model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/random_forest.pkl"
+    # raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
+    # processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
+    # model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
 
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
     classifiers = {
@@ -119,12 +107,12 @@ if __name__ == "__main__":
     total_datapoints = len(datapoints_as_array)
     split = int(0.8*total_datapoints)
     # 1:4 implies RGB Model
-    x_train, y_train = datapoints_as_array[:split, :], labels_as_array[:split].astype(np.uint8)
-    x_test, y_test = datapoints_as_array[split:, :], labels_as_array[split:].astype(np.uint8)
+    x_train, y_train = datapoints_as_array[:split, 1:4], labels_as_array[:split].astype(np.uint8)
+    x_test, y_test = datapoints_as_array[split:, 1:4], labels_as_array[split:].astype(np.uint8)
     print("(LOG): Dataset for Training and Testing Prepared")
     print("(LOG): Training Data: {}; Testing Data: {}".format(x_train.shape, x_test.shape))
     # call model for training
-    trained_classifier = train_and_test_statistical_model(name="RandomForestClassifier-FullSpectrum", classifier=classifiers["RandomForestClassifier"],
+    trained_classifier = train_and_test_statistical_model(name="DecisionTreeClassifier-RGB", classifier=classifiers["DecisionTreeClassifier"],
                                                           x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
     with open(model_path, 'wb') as model_file:
         print(cPickle.dump(trained_classifier, model_file, protocol=2))

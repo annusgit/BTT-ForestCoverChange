@@ -481,29 +481,29 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             # this_example_subset = np.dstack((HH_gamma_naught, HV_gamma_naught, angle))
 
             # get more indices to add to the example, landsat-8
-            # ndvi_band = (this_example_subset[:,:,4]-
-            #              this_example_subset[:,:,3])/(this_example_subset[:,:,4]+
-            #                                           this_example_subset[:,:,3]+1e-7)
-            # evi_band = 2.5*(this_example_subset[:,:,4]-
-            #                 this_example_subset[:,:,3])/(this_example_subset[:,:,4]+
-            #                                              6*this_example_subset[:,:,3]-
-            #                                              7.5*this_example_subset[:,:,1]+1)
-            # savi_band = 1.5*(this_example_subset[:,:,4]-
-            #                  this_example_subset[:,:,3])/(this_example_subset[:,:,4]+
-            #                                               this_example_subset[:,:,3]+0.5)
-            # msavi_band = 0.5*(2*this_example_subset[:,:,4]+1-
-            #                   np.sqrt((2*this_example_subset[:,:,4]+1)**2-
-            #                           8*(this_example_subset[:,:,4]-
-            #                              this_example_subset[:,:,3])))
-            # ndmi_band = (this_example_subset[:,:,4]-
-            #              this_example_subset[:,:,5])/(this_example_subset[:,:,4]+
-            #                                           this_example_subset[:,:,5]+1e-7)
-            # nbr_band = (this_example_subset[:,:,4]-
-            #             this_example_subset[:,:,6])/(this_example_subset[:,:,4]+
-            #                                          this_example_subset[:,:,6]+1e-7)
-            # nbr2_band = (this_example_subset[:,:,5]-
-            #              this_example_subset[:,:,6])/(this_example_subset[:,:,5]+
-            #                                           this_example_subset[:,:,6]+1e-7)
+            ndvi_band = (this_example_subset[:,:,4]-
+                         this_example_subset[:,:,3])/(this_example_subset[:,:,4]+
+                                                      this_example_subset[:,:,3]+1e-7)
+            evi_band = 2.5*(this_example_subset[:,:,4]-
+                            this_example_subset[:,:,3])/(this_example_subset[:,:,4]+
+                                                         6*this_example_subset[:,:,3]-
+                                                         7.5*this_example_subset[:,:,1]+1)
+            savi_band = 1.5*(this_example_subset[:,:,4]-
+                             this_example_subset[:,:,3])/(this_example_subset[:,:,4]+
+                                                          this_example_subset[:,:,3]+0.5)
+            msavi_band = 0.5*(2*this_example_subset[:,:,4]+1-
+                              np.sqrt((2*this_example_subset[:,:,4]+1)**2-
+                                      8*(this_example_subset[:,:,4]-
+                                         this_example_subset[:,:,3])))
+            ndmi_band = (this_example_subset[:,:,4]-
+                         this_example_subset[:,:,5])/(this_example_subset[:,:,4]+
+                                                      this_example_subset[:,:,5]+1e-7)
+            nbr_band = (this_example_subset[:,:,4]-
+                        this_example_subset[:,:,6])/(this_example_subset[:,:,4]+
+                                                     this_example_subset[:,:,6]+1e-7)
+            nbr2_band = (this_example_subset[:,:,5]-
+                         this_example_subset[:,:,6])/(this_example_subset[:,:,5]+
+                                                      this_example_subset[:,:,6]+1e-7)
 
             # # get more indices to add to the example, landsat-8
             # ndvi_band = (this_example_subset[:,:,7] -
@@ -528,23 +528,21 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             # print(this_example_subset.shape, ndvi_band.shape, evi_band.shape,
             #       savi_band.shape, ndmi_band.shape, nbr_band.shape)
 
-            # ndvi_band = np.nan_to_num(ndvi_band)
-            # evi_band = np.nan_to_num(evi_band)
-            # savi_band = np.nan_to_num(savi_band)
-            # # msavi_band = np.nan_to_num(msavi_band)
-            # ndmi_band = np.nan_to_num(ndmi_band)
-            # nbr_band = np.nan_to_num(nbr_band)
-            # # nbr2_band = np.nan_to_num(nbr2_band)
+            ndvi_band = np.nan_to_num(ndvi_band)
+            evi_band = np.nan_to_num(evi_band)
+            savi_band = np.nan_to_num(savi_band)
+            msavi_band = np.nan_to_num(msavi_band)
+            ndmi_band = np.nan_to_num(ndmi_band)
+            nbr_band = np.nan_to_num(nbr_band)
+            nbr2_band = np.nan_to_num(nbr2_band)
 
-            # this_example_subset = np.dstack((this_example_subset, ndvi_band))
-            # this_example_subset = np.dstack((this_example_subset, evi_band))
-            # this_example_subset = np.dstack((this_example_subset, savi_band))
-            # # this_example_subset = np.dstack((this_example_subset, msavi_band))
-            # this_example_subset = np.dstack((this_example_subset, ndmi_band))
-            # this_example_subset = np.dstack((this_example_subset, nbr_band))
-            # # this_example_subset = np.dstack((this_example_subset, nbr2_band))
-            # # # re-scale
-            # # this_example_subset = this_example_subset / 1000
+            this_example_subset = np.dstack((this_example_subset, ndvi_band))
+            this_example_subset = np.dstack((this_example_subset, evi_band))
+            this_example_subset = np.dstack((this_example_subset, savi_band))
+            this_example_subset = np.dstack((this_example_subset, msavi_band))
+            this_example_subset = np.dstack((this_example_subset, ndmi_band))
+            this_example_subset = np.dstack((this_example_subset, nbr_band))
+            this_example_subset = np.dstack((this_example_subset, nbr2_band))
 
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
             this_label_subset = fix(this_label_subset, total_labels=max_label).astype(np.uint8)

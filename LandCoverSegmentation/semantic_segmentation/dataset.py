@@ -44,14 +44,43 @@ def adaptive_resize(array, new_shape):
     return np.asarray(single_band_resized)
 
 
+def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, district, this_landsat8_bands_list):
+    this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
+    ds = gdal.Open(this_shapefile_path)
+    assert ds.RasterCount == 1
+    shapefile_mask = np.array(ds.GetRasterBand(1).ReadAsArray(), dtype=np.uint8)
+    clipped_full_spectrum = list()
+    for idx, this_band in enumerate(this_landsat8_bands_list):
+        print("{}: Band-{} Size: {}".format(district, idx, this_band.shape))
+        clipped_full_spectrum.append(np.multiply(this_band, shapefile_mask))
+    x_prev, y_prev = clipped_full_spectrum[0].shape
+    x_fixed, y_fixed = int(128 * np.ceil(x_prev / 128)), int(128 * np.ceil(y_prev / 128))
+    diff_x, diff_y = x_fixed - x_prev, y_fixed - y_prev
+    diff_x_before, diff_y_before = diff_x // 2, diff_y // 2
+    clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x - diff_x_before), (diff_y_before, diff_y - diff_y_before)], mode='constant')
+                                     for x in clipped_full_spectrum]
+    print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_resized[0].shape, len(clipped_full_spectrum_resized)))
+    return clipped_full_spectrum_resized
+
+
 def get_images_from_large_file(bands, year, region, stride):
+    # local machine
+    data_directory_path = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Images_and_GroundTruth'
+    destination = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\'
+
+    # # cloud machine
     # data_directory_path = '/home/azulfiqar_bee15seecs/training_data/clipped_training_data/'
-    data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
-    image_path = os.path.join(data_directory_path, 'landsat8_4326_30_{}_region_{}.tif'.format(2015, region))
+    # destination = '/home/azulfiqar_bee15seecs/training_data/training_2015_pickled_data/'
+
+    # # tukl cluster
+    # data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
+    # destination = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
+
+    # # tukl cluster
+    # image_path = os.path.join(data_directory_path, 'landsat8_4326_30_{}_region_{}.tif'.format(2015, region))
+
+    image_path = os.path.join(data_directory_path, '{}_image.tif'.format(region))
     label_path = os.path.join(data_directory_path, '{}_{}.tif'.format(region, year))
-    destination_directory_path = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
-    # destination = os.path.join(destination_directory_path, '{}'.format(year))
-    destination = destination_directory_path
     if not os.path.exists(destination):
         print('Log: Making parent directory: {}'.format(destination))
         os.mkdir(destination)
@@ -68,7 +97,6 @@ def get_images_from_large_file(bands, year, region, stride):
     # print(label.shape, (y_size, x_size))
     all_raster_bands = [image_ds.GetRasterBand(x) for x in bands]
     count = 0
-    # stride = 3000  # for testing only
     for i in range(y_size//stride):
         for j in range(x_size//stride):
             count += 1

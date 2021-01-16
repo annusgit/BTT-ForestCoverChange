@@ -37,7 +37,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
     # define loss and optimizer
     optimizer = RMSprop(model.parameters(), lr=lr)
-    weights = torch.Tensor([1, 2, 2])  # forest has ____ times more weight
+    weights = torch.Tensor([1, 10, 10])  # forest has ____ times more weight
     weights = weights.cuda(device=device) if cuda else weights
     focal_criterion = FocalLoss2d(weight=weights)
     # crossentropy_criterion = nn.BCELoss(weight=weights)
@@ -195,7 +195,7 @@ def eval_net(**kwargs):
         model_path = os.path.join(kwargs['save_dir'], 'model-{}.pt'.format(pre_model))
         model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
         print('log: resumed model {} successfully!'.format(pre_model))
-        weights = torch.Tensor([1, 2, 2])  # forest has ___ times more weight
+        weights = torch.Tensor([1, 10, 10])  # forest has ___ times more weight
         weights = weights.cuda(device=device) if cuda else weights
         # dice_criterion, focal_criterion = nn.CrossEntropyLoss(), DiceLoss(), FocalLoss2d()
         # crossentropy_criterion = nn.BCELoss(weight=weights)

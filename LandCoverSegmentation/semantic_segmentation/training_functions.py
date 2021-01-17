@@ -195,7 +195,7 @@ def eval_net(**kwargs):
         print('Confusion Matrix from Scikit-Learn\n')
         print(confusion)
         print('\nClassification Report\n')
-        print(classification_report(all_ground_truth, all_predictions, target_names=['Null-Pixels', 'Non-Forest', 'Forest']))
+        print(classification_report(all_ground_truth, all_predictions, target_names=['Non-Forest', 'Forest']))
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
         return mean_accuracy
 
@@ -268,7 +268,7 @@ def eval_net(**kwargs):
         print('Confusion Matrix from Scikit-Learn\n')
         print(confusion)
         print('\nClassification Report\n')
-        print(classification_report(all_ground_truth, all_predictions, target_names=['Null-Pixels', 'Non-Forest', 'Forest']))
+        print(classification_report(all_ground_truth, all_predictions, target_names=['Non-Forest', 'Forest']))
         with open('normalized.pkl', 'wb') as this:
             pkl.dump(confusion_meter.value(), this, protocol=pkl.HIGHEST_PROTOCOL)
         with open('un_normalized.pkl', 'wb') as this:

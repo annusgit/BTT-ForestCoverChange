@@ -680,17 +680,17 @@ def main():
 if __name__ == '__main__':
     # main()
 
-    # # generate pickle files to train from
-    # all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
-    #                  "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    # for district in all_districts:
-    #     print("=======================================================================================================")
-    #     get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
+    # generate pickle files to train from
+    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+                     "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    for district in all_districts:
+        print("=======================================================================================================")
+        get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
 
-    # check some generated pickle files
-    for i in range(1, 65):
-        check_generated_fnf_datapickle(f'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\'
-                                       f'abbottabad_2015_{i}.pkl')
+    # # check some generated pickle files
+    # for i in range(1, 65):
+    #     check_generated_fnf_datapickle(f'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\'
+    #                                    f'abbottabad_2015_{i}.pkl')
 
     # get_images_from_large_file(image_path='raw_dataset/full_test_site_2015.tif',
     #                            bands=range(1, 14),

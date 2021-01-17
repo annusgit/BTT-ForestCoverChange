@@ -65,16 +65,16 @@ def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, d
 
 def get_images_from_large_file(bands, year, region, stride):
     # local machine
-    data_directory_path = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Images_and_GroundTruth'
-    destination = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\'
+    # data_directory_path = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Images_and_GroundTruth'
+    # destination = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\'
 
     # # cloud machine
     # data_directory_path = '/home/azulfiqar_bee15seecs/training_data/clipped_training_data/'
     # destination = '/home/azulfiqar_bee15seecs/training_data/training_2015_pickled_data/'
 
     # # tukl cluster
-    # data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
-    # destination = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
+    data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
+    destination = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
 
     # # tukl cluster
     # image_path = os.path.join(data_directory_path, 'landsat8_4326_30_{}_region_{}.tif'.format(2015, region))

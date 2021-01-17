@@ -27,8 +27,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     function_to_call = eval(args.function)
-    # RGB input - Output: 0: Null, 1: Non-forest, 2: Forest
-    net = UNet(input_channels=18, num_classes=3)
+    # RGB input - 1: Non-forest, 2: Forest
+    net = UNet(input_channels=18, num_classes=2)
 
     # model, images, labels, block_size, input_dim, workers, pre_model,save_dir,
     #       sum_dir, batch_size, lr, log_after, cuda, device

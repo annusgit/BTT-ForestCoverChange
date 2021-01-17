@@ -35,13 +35,13 @@ def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test,
     print('Confusion Matrix')
     print(confusion_matrix_to_print)
     print('Classification Report')
-    print(classification_report(y_test, y_pred, target_names=['Null-Pixels', 'Non-Forest', 'Forest']))
+    print(classification_report(y_test, y_pred, target_names=['Non-Forest', 'Forest']))
     return trained_classifier
 
 
 if __name__ == "__main__":
     raw_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\"
-    processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\100k_dataset.pkl"
+    processed_dataset_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\1M_dataset.pkl"
     model_path = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset\\logistic_regressor.pkl"
 
     # raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "SVC": SVC(verbose=1),
         "Perceptron": Perceptron(verbose=1, n_jobs=4),
         "GaussianNB": GaussianNB(),
-        "LogisticRegression": LogisticRegression(verbose=1, n_jobs=4, max_iter=1000, solver='lbfgs'),
+        "LogisticRegression": LogisticRegression(verbose=1, n_jobs=4, max_iter=1000, solver='lbfgs', class_weight={1: 1, 2: 2}),
         "DecisionTreeClassifier": DecisionTreeClassifier(),
         "RandomForestClassifier": RandomForestClassifier(verbose=1, n_jobs=4),
     }
@@ -76,9 +76,13 @@ if __name__ == "__main__":
             with open(this_pickled_file, 'rb') as this_small_data_sample:
                 small_image_sample, small_label_sample = cPickle.load(this_small_data_sample)
                 this_shape = small_image_sample.shape
-                random_rows, random_cols = np.random.randint(0, this_shape[0], size=606), np.random.randint(0, this_shape[0], size=606)
-                sample_datapoint = small_image_sample[random_rows, random_cols, :]
-                sample_label = small_label_sample[random_rows, random_cols]
+                random_rows, random_cols = np.random.randint(0, this_shape[0], size=1500), np.random.randint(0, this_shape[0], size=1500)
+                sample_datapoints = small_image_sample[random_rows, random_cols, :]
+                sample_labels = small_label_sample[random_rows, random_cols]
+                # pick only valid (not NULL) pixels
+                valid_samples = (sample_labels != 0)
+                sample_datapoints = sample_datapoints[valid_samples]
+                sample_labels = sample_labels[valid_samples]
                 # apply the following code if you want 18 bands in your sample points
                 # # get more indices to add to the example, landsat-8
                 # ndvi_band = (sample_datapoint[:, 4]-sample_datapoint[:, 3]) / (sample_datapoint[:, 4] + sample_datapoint[:, 3] + 1e-7)
@@ -95,8 +99,8 @@ if __name__ == "__main__":
                 # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(ndmi_band, axis=1)), axis=1)
                 # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr_band, axis=1)), axis=1)
                 # sample_datapoint = np.concatenate((sample_datapoint, np.expand_dims(nbr2_band, axis=1)), axis=1)
-            datapoints_as_array = np.concatenate((datapoints_as_array, sample_datapoint), axis=0)
-            labels_as_array = np.concatenate((labels_as_array, sample_label), axis=0)
+            datapoints_as_array = np.concatenate((datapoints_as_array, sample_datapoints), axis=0)
+            labels_as_array = np.concatenate((labels_as_array, sample_labels), axis=0)
         # at this point, we just serialize the arrays and save them
         with open(processed_dataset_path, 'wb') as processed_dataset:
             cPickle.dump((datapoints_as_array, labels_as_array), processed_dataset)
@@ -107,12 +111,12 @@ if __name__ == "__main__":
     total_datapoints = len(datapoints_as_array)
     split = int(0.8*total_datapoints)
     # 1:4 implies RGB Model
-    x_train, y_train = datapoints_as_array[:split, 1:4], labels_as_array[:split].astype(np.uint8)
-    x_test, y_test = datapoints_as_array[split:, 1:4], labels_as_array[split:].astype(np.uint8)
+    x_train, y_train = datapoints_as_array[:split, :], labels_as_array[:split].astype(np.uint8)
+    x_test, y_test = datapoints_as_array[split:, :], labels_as_array[split:].astype(np.uint8)
     print("(LOG): Dataset for Training and Testing Prepared")
     print("(LOG): Training Data: {}; Testing Data: {}".format(x_train.shape, x_test.shape))
     # call model for training
-    trained_classifier = train_and_test_statistical_model(name="DecisionTreeClassifier-RGB", classifier=classifiers["DecisionTreeClassifier"],
+    trained_classifier = train_and_test_statistical_model(name="LogisticRegression-11bands", classifier=classifiers["LogisticRegression"],
                                                           x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
     with open(model_path, 'wb') as model_file:
         print(cPickle.dump(trained_classifier, model_file, protocol=2))

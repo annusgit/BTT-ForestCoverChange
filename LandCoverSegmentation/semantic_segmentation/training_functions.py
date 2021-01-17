@@ -37,7 +37,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
     # define loss and optimizer
     optimizer = RMSprop(model.parameters(), lr=lr)
-    weights = torch.Tensor([1, 10, 10])  # forest has ____ times more weight
+    weights = torch.Tensor([10, 10])  # forest has ____ times more weight
     weights = weights.cuda(device=device) if cuda else weights
     focal_criterion = FocalLoss2d(weight=weights)
     # crossentropy_criterion = nn.BCELoss(weight=weights)
@@ -131,6 +131,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
 @torch.no_grad()
 def eval_net(**kwargs):
+    num_classes = 2
     cuda = kwargs['cuda']
     device = kwargs['device']
     model = kwargs['model']
@@ -145,7 +146,6 @@ def eval_net(**kwargs):
         model = kwargs['model']
         focal_criterion = kwargs['criterion']
         total_examples, total_correct, net_loss = 0, 0, []
-        num_classes = 3
         un_confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=False)
         confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=True)
         for idx, data in enumerate(val_loader):
@@ -158,16 +158,30 @@ def eval_net(**kwargs):
             # dice_criterion(softmaxed, label) # + focal_criterion(softmaxed, not_one_hot_target) #
             # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
             loss = focal_criterion(softmaxed, not_one_hot_target) #dice_criterion(softmaxed, label) #
-            accurate = (pred == not_one_hot_target).sum().item()
+            label_valid_indices = (not_one_hot_target.view(-1) != 0)
+            valid_label = not_one_hot_target.view(-1)[label_valid_indices]
+            valid_pred = pred.view(-1)[label_valid_indices]
+            # without NULL elimination
+            # accurate = (pred == not_one_hot_target).sum().item()
+            # numerator = float(accurate)
+            # denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
+            # with NULL elimination
+            accurate = (valid_pred == valid_label).sum().item()
             numerator = float(accurate)
-            denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
+            denominator = float(valid_pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
             total_correct += numerator
             total_examples += denominator
             net_loss.append(loss.item())
-            un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
-            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
+            # without NULL elimination
+            # un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
+            # confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
+            # all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
+            # all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
+            # with NULL elimination
+            un_confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
+            confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
+            all_predictions = np.concatenate((all_predictions, valid_pred.view(-1).cpu()), axis=0)
+            all_ground_truth = np.concatenate((all_ground_truth, valid_label.view(-1).cpu()), axis=0)
             #################################
         mean_accuracy = total_correct*100/total_examples
         mean_loss = np.asarray(net_loss).mean()
@@ -189,13 +203,12 @@ def eval_net(**kwargs):
         # model, images, labels, pre_model, save_dir, sum_dir, batch_size, lr, log_after, cuda
         pre_model = kwargs['pre_model']
         batch_size = kwargs['batch_size']
-        num_classes = 3  # we convert to a binary classification problem at test time only
         un_confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=False)
         confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=True)
         model_path = os.path.join(kwargs['save_dir'], 'model-{}.pt'.format(pre_model))
         model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
         print('log: resumed model {} successfully!'.format(pre_model))
-        weights = torch.Tensor([1, 10, 10])  # forest has ___ times more weight
+        weights = torch.Tensor([10, 10])  # forest has ___ times more weight
         weights = weights.cuda(device=device) if cuda else weights
         # dice_criterion, focal_criterion = nn.CrossEntropyLoss(), DiceLoss(), FocalLoss2d()
         # crossentropy_criterion = nn.BCELoss(weight=weights)
@@ -215,32 +228,32 @@ def eval_net(**kwargs):
             out_x, softmaxed = model.forward(test_x)
             pred = torch.argmax(softmaxed, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
-            '''
-                Not needed anymore, forest is already 0 and non-forest has label 1
-            # convert to binary classes
-            # 0-> noise, 1-> forest, 2-> non-forest, 3-> water
-            # pred[pred == 0] = 2
-            # pred[pred == 3] = 2
-            # not_one_hot_target[not_one_hot_target == 0] = 2
-            # not_one_hot_target[not_one_hot_target == 3] = 2
-            # # now convert 1, 2 to 0, 1
-            # pred -= 1
-            # not_one_hot_target -= 1
-            '''
-            # dice_criterion(softmaxed, label) # +
-            # print(softmaxed.shape, label.shape)
-            # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
+            #######################################################
             loss = focal_criterion(softmaxed, not_one_hot_target)  # dice_criterion(softmaxed, label) #
-            accurate = (pred == not_one_hot_target).sum().item()
+            label_valid_indices = (not_one_hot_target.view(-1) != 0)
+            valid_label = not_one_hot_target.view(-1)[label_valid_indices]
+            valid_pred = pred.view(-1)[label_valid_indices]
+            # without NULL elimination
+            # accurate = (pred == not_one_hot_target).sum().item()
+            # numerator = float(accurate)
+            # denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
+            # with NULL elimination
+            accurate = (valid_pred == valid_label).sum().item()
             numerator = float(accurate)
-            denominator = float(pred.view(-1).size(0))  # test_x.size(0)*dimension**2)
+            denominator = float(valid_pred.view(-1).size(0))  # test_x.size(0)*dimension**2)
             total_correct += numerator
             total_examples += denominator
             net_loss.append(loss.item())
-            un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
-            all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
+            # without NULL elimination
+            # un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
+            # confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
+            # all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
+            # all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
+            # with NULL elimination
+            un_confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
+            confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
+            all_predictions = np.concatenate((all_predictions, valid_pred.view(-1).cpu()), axis=0)
+            all_ground_truth = np.concatenate((all_ground_truth, valid_label.view(-1).cpu()), axis=0)
             if idx % 10 == 0:
                 print('log: on {}'.format(idx))
             #################################

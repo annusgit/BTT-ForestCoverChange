@@ -428,7 +428,7 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
-        def __init__(self, data_list, data_map_path, stride, mode='train', transformation=None, do_fix=False):
+        def __init__(self, data_list, data_map_path, stride, mode='train', transformation=None):
             super(dataset, self).__init__()
             self.model_input_size = model_input_size
             self.data_list = data_list
@@ -496,7 +496,7 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
-            if do_fix:
+            if self.mode == 'train':
                 this_label_subset = fix(this_label_subset, total_labels=max_label).astype(np.uint8)
 
             # if self.mode != 'train':
@@ -589,11 +589,11 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
     # create dataset class instances
     # images_per_image means approx. how many images are in each example
     train_data = dataset(data_list=train_list, data_map_path=os.path.join(save_data_path, 'train_datamap.pkl'), mode='train', stride=8,
-                         transformation=transformation, do_fix=True)  # more images for training
+                         transformation=transformation)  # more images for training
     eval_data = dataset(data_list=eval_list, data_map_path=os.path.join(save_data_path, 'eval_datamap.pkl'), mode='test', stride=model_input_size,
-                        transformation=transformation, do_fix=False)
+                        transformation=transformation)
     test_data = dataset(data_list=test_list, data_map_path=os.path.join(save_data_path, 'test_datamap.pkl'), mode='test', stride=model_input_size,
-                        transformation=transformation, do_fix=False)
+                        transformation=transformation)
     print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
     # print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
     # print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))

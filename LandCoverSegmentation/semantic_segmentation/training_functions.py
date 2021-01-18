@@ -7,7 +7,7 @@ from loss import *
 import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 import torch.utils.model_zoo as model_zoo
-from dataset import get_dataloaders_generated_data
+from dataset import fix, get_dataloaders_generated_data
 import os
 import numpy as np
 import pickle as pkl
@@ -159,7 +159,8 @@ def eval_net(**kwargs):
             # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
             loss = focal_criterion(softmaxed, not_one_hot_target) #dice_criterion(softmaxed, label) #
             label_valid_indices = (not_one_hot_target.view(-1) != 0)
-            valid_label = not_one_hot_target.view(-1)[label_valid_indices]
+            # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
+            valid_label = not_one_hot_target.view(-1)[label_valid_indices] - 1
             valid_pred = pred.view(-1)[label_valid_indices]
             # without NULL elimination
             # accurate = (pred == not_one_hot_target).sum().item()
@@ -231,7 +232,8 @@ def eval_net(**kwargs):
             #######################################################
             loss = focal_criterion(softmaxed, not_one_hot_target)  # dice_criterion(softmaxed, label) #
             label_valid_indices = (not_one_hot_target.view(-1) != 0)
-            valid_label = not_one_hot_target.view(-1)[label_valid_indices]
+            # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
+            valid_label = not_one_hot_target.view(-1)[label_valid_indices] - 1
             valid_pred = pred.view(-1)[label_valid_indices]
             # without NULL elimination
             # accurate = (pred == not_one_hot_target).sum().item()

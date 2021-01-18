@@ -234,7 +234,7 @@ def convert_labels(label_im):
     return label_im
 
 
-def fix(target_image, total_labels):
+def fix(target_image, total_labels=0):
     # we fix the label by
     # 1. Converting all NULL (0) pixels to Non-forest pixels (1)
     target_image[target_image == 0] = 1  # this will convert all null pixels to non-forest pixels
@@ -424,7 +424,7 @@ def get_dataloaders_raw(images_path, bands, labels_path, save_data_path, block_s
 
 
 def get_dataloaders_generated_data(generated_data_path, save_data_path, model_input_size=64, num_classes=4, train_split=0.8, one_hot=False,
-                                   batch_size=16, num_workers=4, max_label=3):
+                                   batch_size=16, num_workers=4, max_label=3, do_fix=False):
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
@@ -496,7 +496,8 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
-            this_label_subset = fix(this_label_subset, total_labels=max_label).astype(np.uint8)
+            if do_fix:
+                this_label_subset = fix(this_label_subset, total_labels=max_label).astype(np.uint8)
 
             # if self.mode != 'train':
             #     these_labels, their_frequency = np.unique(this_label_subset, return_counts=True)
@@ -588,11 +589,11 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
     # create dataset class instances
     # images_per_image means approx. how many images are in each example
     train_data = dataset(data_list=train_list, data_map_path=os.path.join(save_data_path, 'train_datamap.pkl'), mode='train', stride=8,
-                         transformation=transformation)  # more images for training
+                         transformation=transformation, do_fix=True)  # more images for training
     eval_data = dataset(data_list=eval_list, data_map_path=os.path.join(save_data_path, 'eval_datamap.pkl'), mode='test', stride=model_input_size,
-                        transformation=transformation)
+                        transformation=transformation, do_fix=False)
     test_data = dataset(data_list=test_list, data_map_path=os.path.join(save_data_path, 'test_datamap.pkl'), mode='test', stride=model_input_size,
-                        transformation=transformation)
+                        transformation=transformation, do_fix=False)
     print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
     # print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
     # print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))

@@ -424,11 +424,11 @@ def get_dataloaders_raw(images_path, bands, labels_path, save_data_path, block_s
 
 
 def get_dataloaders_generated_data(generated_data_path, save_data_path, model_input_size=64, num_classes=4, train_split=0.8, one_hot=False,
-                                   batch_size=16, num_workers=4, max_label=3, do_fix=False):
+                                   batch_size=16, num_workers=4, max_label=3):
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
-        def __init__(self, data_list, data_map_path, stride, mode='train', transformation=None):
+        def __init__(self, data_list, data_map_path, stride, mode='train', transformation=None, do_fix=False):
             super(dataset, self).__init__()
             self.model_input_size = model_input_size
             self.data_list = data_list

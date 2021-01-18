@@ -157,7 +157,7 @@ def eval_net(**kwargs):
             not_one_hot_target = torch.argmax(label, dim=1)
             # dice_criterion(softmaxed, label) # + focal_criterion(softmaxed, not_one_hot_target) #
             # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
-            loss = focal_criterion(softmaxed, not_one_hot_target) #dice_criterion(softmaxed, label) #
+            loss = focal_criterion(softmaxed, not_one_hot_target-1)  # dice_criterion(softmaxed, label) #
             label_valid_indices = (not_one_hot_target.view(-1) != 0)
             # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
             valid_label = not_one_hot_target.view(-1)[label_valid_indices] - 1
@@ -199,7 +199,6 @@ def eval_net(**kwargs):
         print(classification_report(all_ground_truth, all_predictions, target_names=['Non-Forest', 'Forest']))
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
         return mean_accuracy
-
     else:
         # model, images, labels, pre_model, save_dir, sum_dir, batch_size, lr, log_after, cuda
         pre_model = kwargs['pre_model']

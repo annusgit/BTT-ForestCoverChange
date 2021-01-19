@@ -65,19 +65,16 @@ def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, d
 
 def get_images_from_large_file(bands, year, region, stride):
     # local machine
-    # data_directory_path = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Images_and_GroundTruth'
-    # destination = 'E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\Pickled_data\\'
+    data_directory_path = '/mnt/e/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/Images_and_GroundTruth'
+    destination = '/mnt/e/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/Pickled_data/'
 
     # # cloud machine
     # data_directory_path = '/home/azulfiqar_bee15seecs/training_data/clipped_training_data/'
     # destination = '/home/azulfiqar_bee15seecs/training_data/training_2015_pickled_data/'
 
-    # # tukl cluster
-    data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
-    destination = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
-
-    # # tukl cluster
-    # image_path = os.path.join(data_directory_path, 'landsat8_4326_30_{}_region_{}.tif'.format(2015, region))
+    # # # tukl cluster
+    # data_directory_path = '/work/mohsin/BTT_districts_maps/training_2015/'
+    # destination = '/work/mohsin/BTT_districts_maps/training_2015_pickled_data/'
 
     image_path = os.path.join(data_directory_path, '{}_image.tif'.format(region))
     label_path = os.path.join(data_directory_path, '{}_{}.tif'.format(region, year))
@@ -464,13 +461,17 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                                 self.total_images += 1
 
                 with open(data_map_path, 'wb') as data_map:
-                    pickle.dump((self.data_list, self.all_images), file=data_map, protocol=pickle.HIGHEST_PROTOCOL)
+                    pickle.dump((self.data_list, self.all_images), file=data_map)  # , protocol=pickle.HIGHEST_PROTOCOL)
                     print('LOG: {} saved!'.format(data_map_path))
             pass
 
         def __getitem__(self, k):
             k = k % self.total_images
             (example_path, this_row, this_col) = self.all_images[k]
+            # fix example path here
+            # print("Fixing datapath")
+            # example_path = os.path.join("/mnt/e/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/Pickled_data",
+            #                             os.path.basename(os.path.normpath(example_path)))
             with open(example_path, 'rb') as this_pickle:
                 (example_subset, label_subset) = pickle.load(this_pickle)
                 example_subset = np.nan_to_num(example_subset)
@@ -479,7 +480,6 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             # this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
             # get all bands in the image
             this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
-
             # get more indices to add to the example, landsat-8
             ndvi_band = (this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+this_example_subset[:,:,3]+1e-7)
             evi_band = 2.5*(this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+6*this_example_subset[:,:,3]-7.5*this_example_subset[:,:,1]+1)
@@ -644,11 +644,12 @@ def main():
     #                               save_data_path='dataset/pickled_data.pkl',
     #                               block_size=256, model_input_size=64, batch_size=16, num_workers=6)
 
-    # loaders = get_dataloaders_generated_data(generated_data_path='E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\'
-    #                                                              'Pickled_data\\',
-    loaders = get_dataloaders_generated_data(generated_data_path='/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data/',
-                                             save_data_path='/home/azulfiqar_bee15seecs/training_data/training_lists', model_input_size=128,
-                                             num_classes=2, train_split=0.8, one_hot=True, batch_size=64, num_workers=4, max_label=2)
+    # loaders = get_dataloaders_generated_data(generated_data_path='/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data/',
+    # save_data_path = '/home/azulfiqar_bee15seecs/training_data/training_lists'
+    loaders = get_dataloaders_generated_data(generated_data_path='/mnt/e/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/'
+                                                                 'Pickled_data/',
+                                             save_data_path="/mnt/e/Forest Cover - Redo 2020/Google Cloud - Training/training_lists",
+                                             model_input_size=128, num_classes=2, train_split=0.8, one_hot=True, batch_size=16, num_workers=4, max_label=2)
 
     # loaders = get_dataloaders_generated_data(generated_data_path='/home/annuszulfiqar/forest_cover/forestcoverUnet/'
     #                                                              'ESA_landcover/semantic_segmentation/'
@@ -663,30 +664,30 @@ def main():
             examples, labels = data['input'], data['label']
             print('-> on batch {}/{}, {}'.format(idx+1, len(train_dataloader), examples.size()))
             this_example_subset = (examples[0].numpy()).transpose(1, 2, 0)
-            this = np.asarray(255*(this_example_subset[:, :, [2, 1, 0]]), dtype=np.uint8)
+            this = np.asarray(255*(this_example_subset[:, :, [3, 2, 1]]), dtype=np.uint8)
             that = labels[0].numpy().astype(np.uint8)
             # ndvi = this_example_subset[:,:,11]
             print(this.shape, that.shape, np.unique(that))
             # that = np.argmax(that, axis=0)
             # print()
-            # for j in range(7):
-            #     pl.subplot(4,3,j+1)
-            #     pl.imshow(this_example_subset[:,:,11+j])
-            # pl.show()
+            for j in range(7):
+                pl.subplot(4,3,j+1)
+                pl.imshow(this_example_subset[:,:,11+j])
+            pl.show()
             pass
         pass
     pass
 
 
 if __name__ == '__main__':
-    # main()
+    main()
 
-    # generate pickle files to train from
-    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
-                     "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    for district in all_districts:
-        print("=======================================================================================================")
-        get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
+    # # generate pickle files to train from
+    # all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+    #                  "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    # for district in all_districts:
+    #     print("=======================================================================================================")
+    #     get_images_from_large_file(bands=range(1, 12), year=2015, region=district, stride=256)
 
     # # check some generated pickle files
     # for i in range(1, 65):

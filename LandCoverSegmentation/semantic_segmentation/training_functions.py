@@ -85,10 +85,11 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
         torch.save(model.state_dict(), model_path)
         print('log: Saved best performing {}'.format(model_path))
 
-        del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-10))
-        if os.path.exists(del_this):
-            os.remove(del_this)
-            print('log: Removed {}'.format(del_this))
+        # we will save all models for now
+        # del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-10))
+        # if os.path.exists(del_this):
+        #     os.remove(del_this)
+        #     print('log: Removed {}'.format(del_this))
 
         for idx, data in enumerate(train_loader):
             model.train()
@@ -157,7 +158,7 @@ def eval_net(**kwargs):
             not_one_hot_target = torch.argmax(label, dim=1)
             # dice_criterion(softmaxed, label) # + focal_criterion(softmaxed, not_one_hot_target) #
             # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
-            not_one_hot_target_for_loss = not_one_hot_target
+            not_one_hot_target_for_loss = not_one_hot_target.clone()
             not_one_hot_target_for_loss[not_one_hot_target_for_loss == 0] = 1
             not_one_hot_target_for_loss -= 1
             loss = focal_criterion(softmaxed, not_one_hot_target_for_loss)  # dice_criterion(softmaxed, label) #
@@ -232,7 +233,7 @@ def eval_net(**kwargs):
             pred = torch.argmax(softmaxed, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
             #######################################################
-            not_one_hot_target_for_loss = not_one_hot_target
+            not_one_hot_target_for_loss = not_one_hot_target.clone()
             not_one_hot_target_for_loss[not_one_hot_target_for_loss == 0] = 1
             not_one_hot_target_for_loss -= 1
             loss = focal_criterion(softmaxed, not_one_hot_target_for_loss)  # dice_criterion(softmaxed, label) #
@@ -262,7 +263,7 @@ def eval_net(**kwargs):
             all_predictions = np.concatenate((all_predictions, valid_pred.view(-1).cpu()), axis=0)
             all_ground_truth = np.concatenate((all_ground_truth, valid_label.view(-1).cpu()), axis=0)
             if idx % 10 == 0:
-                print('log: on {}'.format(idx))
+                print('log: on test sample: {}/{}'.format(idx, len(test_dataloader)))
             #################################
         mean_accuracy = total_correct*100/total_examples
         mean_loss = np.asarray(net_loss).mean()

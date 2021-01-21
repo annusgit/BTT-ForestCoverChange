@@ -1,0 +1,63 @@
+(LOG): Parameters: 1M dataset with RandomForestClassifier and rgb bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/RandomForestClassifier_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 3); Testing Data: (266949, 3)
+Model Accuracy: 74.74%
+################################ RandomForestClassifier-rgb ################################
+Confusion Matrix
+[[155153  22207]
+ [ 45237  44352]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.77      0.87      0.82    177360
+      Forest       0.67      0.50      0.57     89589
+
+    accuracy                           0.75    266949
+   macro avg       0.72      0.68      0.69    266949
+weighted avg       0.74      0.75      0.74    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/RandomForestClassifier_1M_C1W_1_C2W_1.pkl
+(LOG): Parameters: 1M dataset with RandomForestClassifier and full-spectrum bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/RandomForestClassifier_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 11); Testing Data: (266949, 11)
+Model Accuracy: 78.07%
+################################ RandomForestClassifier-full-spectrum ################################
+Confusion Matrix
+[[155037  22323]
+ [ 36221  53368]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.81      0.87      0.84    177360
+      Forest       0.71      0.60      0.65     89589
+
+    accuracy                           0.78    266949
+   macro avg       0.76      0.73      0.74    266949
+weighted avg       0.78      0.78      0.78    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/RandomForestClassifier_1M_C1W_1_C2W_1.pkl
+(LOG): Parameters: 1M dataset with RandomForestClassifier and augmented bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/RandomForestClassifier_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 18); Testing Data: (266949, 18)
+Model Accuracy: 77.88%
+################################ RandomForestClassifier-augmented ################################
+Confusion Matrix
+[[154818  22542]
+ [ 36508  53081]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.81      0.87      0.84    177360
+      Forest       0.70      0.59      0.64     89589
+
+    accuracy                           0.78    266949
+   macro avg       0.76      0.73      0.74    266949
+weighted avg       0.77      0.78      0.77    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/RandomForestClassifier_1M_C1W_1_C2W_1.pkl

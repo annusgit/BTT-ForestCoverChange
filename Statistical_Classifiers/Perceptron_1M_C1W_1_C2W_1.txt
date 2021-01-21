@@ -1,0 +1,63 @@
+(LOG): Parameters: 1M dataset with Perceptron and rgb bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/Perceptron_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 3); Testing Data: (266949, 3)
+Model Accuracy: 66.44%
+################################ Perceptron-rgb ################################
+Confusion Matrix
+[[177360      0]
+ [ 89589      0]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.66      1.00      0.80    177360
+      Forest       0.00      0.00      0.00     89589
+
+    accuracy                           0.66    266949
+   macro avg       0.33      0.50      0.40    266949
+weighted avg       0.44      0.66      0.53    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/Perceptron_1M_C1W_1_C2W_1.pkl
+(LOG): Parameters: 1M dataset with Perceptron and full-spectrum bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/Perceptron_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 11); Testing Data: (266949, 11)
+Model Accuracy: 66.85%
+################################ Perceptron-full-spectrum ################################
+Confusion Matrix
+[[176571    789]
+ [ 87711   1878]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.67      1.00      0.80    177360
+      Forest       0.70      0.02      0.04     89589
+
+    accuracy                           0.67    266949
+   macro avg       0.69      0.51      0.42    266949
+weighted avg       0.68      0.67      0.54    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/Perceptron_1M_C1W_1_C2W_1.pkl
+(LOG): Parameters: 1M dataset with Perceptron and augmented bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/Perceptron_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 18); Testing Data: (266949, 18)
+Model Accuracy: 69.52%
+################################ Perceptron-augmented ################################
+Confusion Matrix
+[[108786  68574]
+ [ 12803  76786]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.89      0.61      0.73    177360
+      Forest       0.53      0.86      0.65     89589
+
+    accuracy                           0.70    266949
+   macro avg       0.71      0.74      0.69    266949
+weighted avg       0.77      0.70      0.70    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/Perceptron_1M_C1W_1_C2W_1.pkl

@@ -1,0 +1,63 @@
+(LOG): Parameters: 1M dataset with LogisticRegression and rgb bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/LogisticRegression_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 3); Testing Data: (266949, 3)
+Model Accuracy: 67.23%
+################################ LogisticRegression-rgb ################################
+Confusion Matrix
+[[176439    921]
+ [ 86562   3027]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.67      0.99      0.80    177360
+      Forest       0.77      0.03      0.06     89589
+
+    accuracy                           0.67    266949
+   macro avg       0.72      0.51      0.43    266949
+weighted avg       0.70      0.67      0.55    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/LogisticRegression_1M_C1W_1_C2W_1.pkl
+(LOG): Parameters: 1M dataset with LogisticRegression and full-spectrum bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/LogisticRegression_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 11); Testing Data: (266949, 11)
+Model Accuracy: 74.30%
+################################ LogisticRegression-full-spectrum ################################
+Confusion Matrix
+[[159604  17756]
+ [ 50839  38750]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.76      0.90      0.82    177360
+      Forest       0.69      0.43      0.53     89589
+
+    accuracy                           0.74    266949
+   macro avg       0.72      0.67      0.68    266949
+weighted avg       0.73      0.74      0.72    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/LogisticRegression_1M_C1W_1_C2W_1.pkl
+(LOG): Parameters: 1M dataset with LogisticRegression and augmented bands using C1W: 1 and C2W: 1
+(LOG): Will save trained model @ E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/LogisticRegression_1M_C1W_1_C2W_1.pkl
+(LOG): Dataset for Training and Testing Prepared
+(LOG): Training Data: (1067794, 18); Testing Data: (266949, 18)
+Model Accuracy: 76.32%
+################################ LogisticRegression-augmented ################################
+Confusion Matrix
+[[158970  18390]
+ [ 44819  44770]]
+Classification Report
+              precision    recall  f1-score   support
+
+  Non-Forest       0.78      0.90      0.83    177360
+      Forest       0.71      0.50      0.59     89589
+
+    accuracy                           0.76    266949
+   macro avg       0.74      0.70      0.71    266949
+weighted avg       0.76      0.76      0.75    266949
+
+None
+(LOG): Saved Trained Classifier as E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/LogisticRegression_1M_C1W_1_C2W_1.pkl

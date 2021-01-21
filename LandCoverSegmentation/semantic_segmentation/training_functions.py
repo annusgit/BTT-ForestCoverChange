@@ -131,7 +131,7 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
 @torch.no_grad()
 def eval_net(**kwargs):
-    num_classes = 2
+    num_classes = 3
     cuda = kwargs['cuda']
     device = kwargs['device']
     model = kwargs['model']

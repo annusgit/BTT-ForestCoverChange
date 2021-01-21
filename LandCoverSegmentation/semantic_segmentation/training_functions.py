@@ -119,7 +119,6 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
                                                                                                                    out_x.size(), loss.item(), numerator,
                                                                                                                    denominator, accuracy))
             net_loss.append(loss.item())
-
         # this should be done at the end of epoch only
         scheduler.step()  # to dynamically change the learning rate
         mean_accuracy = total_correct*100/total_examples

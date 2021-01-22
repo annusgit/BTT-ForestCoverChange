@@ -477,9 +477,9 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                 example_subset = np.nan_to_num(example_subset)
                 label_subset = np.nan_to_num(label_subset)
             # get RGB bands only
-            this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
+            # this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
             # get all bands in the image
-            # this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
+            this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
             # get more indices to add to the example, landsat-8
             # ndvi_band = (this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+this_example_subset[:,:,3]+1e-7)
             # evi_band = 2.5*(this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+6*this_example_subset[:,:,3]-7.5*this_example_subset[:,:,1]+1)

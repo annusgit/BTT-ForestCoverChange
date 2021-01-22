@@ -240,6 +240,7 @@ def eval_net(**kwargs):
             # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
             valid_label = not_one_hot_target.view(-1)[label_valid_indices]
             valid_pred = pred.view(-1)[label_valid_indices]
+            valid_pred[valid_pred == 0] = 1  # fix the predictions to get NULL pixels into non-forest
             # without NULL elimination
             # accurate = (pred == not_one_hot_target).sum().item()
             # numerator = float(accurate)

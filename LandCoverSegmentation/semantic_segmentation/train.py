@@ -28,16 +28,13 @@ if __name__ == '__main__':
     parser.add_argument('--cuda', dest='cuda', type=int, default=0)
     parser.add_argument('--device', dest='device', type=int, default=0)
     args = parser.parse_args()
-    print('\n\n'+"#"*100)
+    print('\n\n' + "#" * 100)
     print("LOG: The Following Command-Line Parameters Have Been Adopted")
     for index, (key, value) in enumerate(args.__dict__.items(), 1):
         print("{}. {} = {}".format(index, key, value))
-    print("#"*100+'\n\n')
+    print("#" * 100 + '\n\n')
     function_to_call = eval(args.function)
-    # RGB input - 1: Non-forest, 2: Forest
     net = UNet(topology=args.model_topology, input_channels=len(args.bands), num_classes=len(args.classes))
-    # model, images, labels, block_size, input_dim, workers, pre_model,save_dir,
-    #       sum_dir, batch_size, lr, log_after, cuda, device
     function_to_call(model=net, model_topology=args.model_topology, generated_data_path=args.data, input_dim=args.input_dim, bands=args.bands,
                      classes=args.classes, workers=args.workers, pre_model=args.pre_model, data_split_lists=args.data_split_lists, save_dir=args.models_dir,
                      sum_dir=args.summary_dir, batch_size=args.batch_size, lr=args.lr, epochs=args.epochs, log_after=args.log_after, cuda=args.cuda,

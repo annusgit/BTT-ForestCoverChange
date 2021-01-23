@@ -109,7 +109,9 @@ class UNet(nn.Module):
         self.binary_last_conv = nn.Conv2d(64, num_classes, kernel_size=1)
         self.softmax = nn.Softmax(dim=1)
         self.forward = self.topologies[topology]
+        print('\n\n' + "#" * 100)
         print("(LOG): The following Model Topology will be Utilized: {}".format(self.forward.__name__))
+        print("#" * 100 + '\n\n')
         pass
 
     def ENC_1_DEC_1(self, x_in):

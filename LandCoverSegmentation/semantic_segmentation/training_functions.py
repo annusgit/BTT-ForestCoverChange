@@ -22,43 +22,39 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 
-def train_net(model, generated_data_path, input_dim, workers, pre_model, save_data, save_dir, sum_dir, batch_size, lr, epochs, log_after, cuda, device):
+def train_net(model, model_topology, generated_data_path, input_dim, bands, classes, workers, pre_model, data_split_lists, save_dir, sum_dir, batch_size,
+              lr, epochs, log_after, cuda, device):
     # print(model)
     if cuda:
         print('log: Using GPU')
         model.cuda(device=device)
     ###############################################################################
-
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     if not os.path.exists(sum_dir):
         os.mkdir(sum_dir)
     # writer = SummaryWriter()
-
     # define loss and optimizer
     optimizer = RMSprop(model.parameters(), lr=lr)
-    weights = torch.Tensor([1, 1, 1])  # forest has ____ times more weight
+    # save our initial learning rate
+    lr_initial = lr
+    weights = torch.Tensor([10, 10])  # forest has ____ times more weight
     weights = weights.cuda(device=device) if cuda else weights
     focal_criterion = FocalLoss2d(weight=weights)
-    # crossentropy_criterion = nn.BCELoss(weight=weights)
-    # dice_criterion = DiceLoss(weights=weights)
-
-    lr_final = 5e-5
+    lr_final = lr / 10  # get to one tenth of the starting rate
     LR_decay = (lr_final / lr) ** (1. / epochs)
     scheduler = lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=LR_decay)
-
-    loaders = get_dataloaders_generated_data(generated_data_path=generated_data_path, save_data_path=save_data, model_input_size=input_dim,
-                                             batch_size=batch_size, num_classes=3, train_split=0.8, one_hot=True, num_workers=workers, max_label=2)
+    loaders = get_dataloaders_generated_data(generated_data_path=generated_data_path, data_split_lists_path=data_split_lists, model_input_size=input_dim,
+                                             bands=bands, batch_size=batch_size, num_classes=len(classes), train_split=0.8, one_hot=True, num_workers=workers)
     train_loader, val_dataloader, test_loader = loaders
     best_evaluation = 0.0
     ################################################################
-    if pre_model == -1:
+    if pre_model == 'None':
         model_number = 0
         print('log: No trained model passed. Starting from scratch...')
-        # model_path = os.path.join(save_dir, 'model-{}.pt'.format(model_number))
     else:
-        model_number = pre_model
-        model_path = os.path.join(save_dir, 'model-{}.pt'.format(pre_model))
+        model_path = os.path.join(save_dir, pre_model)
+        model_number = int(pre_model.split('/')[-1].split('-')[1])
         model.load_state_dict(torch.load(model_path), strict=False)
         print('log: Resuming from model {} ...'.format(model_path))
         print('log: Evaluating now...')
@@ -66,31 +62,22 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
                                    batch_size=batch_size, step=0)
         print('LOG: Starting with best evaluation accuracy: {:.3f}%'.format(best_evaluation))
     ##########################################################################
-
     # training loop
     for k in range(epochs):
         net_loss = []
         total_correct, total_examples = 0, 0
-
-        # validate model
         print('log: Evaluating now...')
-        eval_accuracy = eval_net(model=model, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
-                                 batch_size=batch_size, step=k)
-
-        # save best performing models only
-        # if eval_accuracy > best_evaluation:
-        # best_evaluation = eval_accuracy
+        eval_net(model=model, classes=classes, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
+                 batch_size=batch_size, step=k)
         model_number += 1
-        model_path = os.path.join(save_dir, 'model-{}.pt'.format(model_number))
+        model_path = os.path.join(save_dir, 'model-{}-{}-{}.pt'.format(model_number, model_topology, lr_initial))
         torch.save(model.state_dict(), model_path)
         print('log: Saved best performing {}'.format(model_path))
-
         # we will save all models for now
         # del_this = os.path.join(save_dir, 'model-{}.pt'.format(model_number-10))
         # if os.path.exists(del_this):
         #     os.remove(del_this)
         #     print('log: Removed {}'.format(del_this))
-
         for idx, data in enumerate(train_loader):
             model.train()
             model.zero_grad()
@@ -100,17 +87,13 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
             out_x, logits = model.forward(test_x)
             pred = torch.argmax(logits, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
-            # dice_criterion(logits, label) #+ focal_criterion(logits, not_one_hot_target) #
-            # print(logits.view(batch_size, -1).shape, logits.view(batch_size, -1).shape)
-            # loss = focal_criterion(logits.view(-1, 2), label.view(-1, 2))
-            # print(logits.shape, not_one_hot_target.shape)
-            loss = focal_criterion(logits, not_one_hot_target)  # dice_criterion(logits, label) #
+            loss = focal_criterion(logits, not_one_hot_target)
             loss.backward()
             clip_grad_norm_(model.parameters(), 0.05)
             optimizer.step()
             accurate = (pred == not_one_hot_target).sum().item()
             numerator = float(accurate)
-            denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
+            denominator = float(pred.view(-1).size(0))
             total_correct += numerator
             total_examples += denominator
             if idx % log_after == 0 and idx > 0:
@@ -131,10 +114,11 @@ def train_net(model, generated_data_path, input_dim, workers, pre_model, save_da
 
 @torch.no_grad()
 def eval_net(**kwargs):
-    num_classes = 3
+    model = kwargs['model']
+    classes = kwargs['classes']
+    num_classes = len(classes)
     cuda = kwargs['cuda']
     device = kwargs['device']
-    model = kwargs['model']
     model.eval()
     all_predictions = np.array([])  # empty all predictions
     all_ground_truth = np.array([])
@@ -155,8 +139,6 @@ def eval_net(**kwargs):
             out_x, softmaxed = model.forward(test_x)
             pred = torch.argmax(softmaxed, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
-            # dice_criterion(softmaxed, label) # + focal_criterion(softmaxed, not_one_hot_target) #
-            # loss = crossentropy_criterion(softmaxed.view(-1, 2), label.view(-1, 2))
             not_one_hot_target_for_loss = not_one_hot_target.clone()
             not_one_hot_target_for_loss[not_one_hot_target_for_loss == 0] = 1
             not_one_hot_target_for_loss -= 1
@@ -165,23 +147,14 @@ def eval_net(**kwargs):
             # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
             valid_label = not_one_hot_target.view(-1)[label_valid_indices] - 1
             valid_pred = pred.view(-1)[label_valid_indices]
-            # without NULL elimination
-            # accurate = (pred == not_one_hot_target).sum().item()
-            # numerator = float(accurate)
-            # denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
-            # with NULL elimination
+            # Eliminate NULL pixels from testing
             accurate = (valid_pred == valid_label).sum().item()
             numerator = float(accurate)
-            denominator = float(valid_pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
+            denominator = float(valid_pred.view(-1).size(0))
             total_correct += numerator
             total_examples += denominator
             net_loss.append(loss.item())
-            # without NULL elimination
-            # un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            # confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            # all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
-            # all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
-            # with NULL elimination
+            # NULL elimination
             un_confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
             confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
             all_predictions = np.concatenate((all_predictions, valid_pred.view(-1).cpu()), axis=0)
@@ -199,28 +172,24 @@ def eval_net(**kwargs):
         print('Confusion Matrix from Scikit-Learn\n')
         print(confusion)
         print('\nClassification Report\n')
-        print(classification_report(all_ground_truth, all_predictions, target_names=['Non-Forest', 'Forest']))
+        print(classification_report(all_ground_truth, all_predictions, target_names=classes))
         print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-        return mean_accuracy
     else:
         # model, images, labels, pre_model, save_dir, sum_dir, batch_size, lr, log_after, cuda
         pre_model = kwargs['pre_model']
         batch_size = kwargs['batch_size']
         un_confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=False)
         confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=True)
-        model_path = os.path.join(kwargs['save_dir'], 'model-{}.pt'.format(pre_model))
+        model_path = os.path.join(kwargs['save_dir'], pre_model)
         model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
         print('log: resumed model {} successfully!'.format(pre_model))
-        weights = torch.Tensor([1, 1, 1])  # forest has ___ times more weight
+        weights = torch.Tensor([10, 10])  # forest has ___ times more weight
         weights = weights.cuda(device=device) if cuda else weights
-        # dice_criterion, focal_criterion = nn.CrossEntropyLoss(), DiceLoss(), FocalLoss2d()
-        # crossentropy_criterion = nn.BCELoss(weight=weights)
         focal_criterion = FocalLoss2d(weight=weights)
-        # dice_criterion = DiceLoss(weights=weights)
-        loaders = get_dataloaders_generated_data(generated_data_path=kwargs['generated_data_path'], save_data_path=kwargs['save_data'],
-                                                 model_input_size=kwargs['input_dim'], batch_size=batch_size, one_hot=True,
-                                                 num_workers=kwargs['workers'], max_label=num_classes)  # train_split=0.8,
-        net_loss = []
+        loaders = get_dataloaders_generated_data(generated_data_path=kwargs['generated_data_path'], data_split_lists_path=kwargs['data_split_lists'],
+                                                 bands=kwargs['bands'], model_input_size=kwargs['input_dim'], num_classes=num_classes, train_split=0.8,
+                                                 one_hot=True, batch_size=batch_size, num_workers=kwargs['workers'])
+        net_loss = list()
         train_dataloader, val_dataloader, test_dataloader = loaders
         total_correct, total_examples = 0, 0
         print("(LOG): Evaluating performance on test data...")
@@ -232,31 +201,22 @@ def eval_net(**kwargs):
             pred = torch.argmax(softmaxed, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
             #######################################################
-            # not_one_hot_target_for_loss = not_one_hot_target.clone()
-            # not_one_hot_target_for_loss[not_one_hot_target_for_loss == 0] = 1
-            # not_one_hot_target_for_loss -= 1
-            loss = focal_criterion(softmaxed, not_one_hot_target)  # dice_criterion(softmaxed, label) #
+            not_one_hot_target_for_loss = not_one_hot_target.clone()
+            not_one_hot_target_for_loss[not_one_hot_target_for_loss == 0] = 1
+            not_one_hot_target_for_loss -= 1
+            loss = focal_criterion(softmaxed, not_one_hot_target_for_loss)
             label_valid_indices = (not_one_hot_target.view(-1) != 0)
             # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
-            valid_label = not_one_hot_target.view(-1)[label_valid_indices]
+            valid_label = not_one_hot_target.view(-1)[label_valid_indices] - 1
             valid_pred = pred.view(-1)[label_valid_indices]
-            valid_pred[valid_pred == 0] = 1  # fix the predictions to get NULL pixels into non-forest
-            # without NULL elimination
-            # accurate = (pred == not_one_hot_target).sum().item()
-            # numerator = float(accurate)
-            # denominator = float(pred.view(-1).size(0)) #test_x.size(0)*dimension**2)
-            # with NULL elimination
+            # NULL elimination
             accurate = (valid_pred == valid_label).sum().item()
             numerator = float(accurate)
-            denominator = float(valid_pred.view(-1).size(0))  # test_x.size(0)*dimension**2)
+            denominator = float(valid_pred.view(-1).size(0))
             total_correct += numerator
             total_examples += denominator
             net_loss.append(loss.item())
-            # without NULL elimination
-            # un_confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            # confusion_meter.add(predicted=pred.view(-1), target=not_one_hot_target.view(-1))
-            # all_predictions = np.concatenate((all_predictions, pred.view(-1).cpu()), axis=0)
-            # all_ground_truth = np.concatenate((all_ground_truth, not_one_hot_target.view(-1).cpu()), axis=0)
+            ########################################
             # with NULL elimination
             un_confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
             confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
@@ -276,7 +236,7 @@ def eval_net(**kwargs):
         print('Confusion Matrix from Scikit-Learn\n')
         print(confusion)
         print('\nClassification Report\n')
-        print(classification_report(all_ground_truth, all_predictions, target_names=['Non-Forest', 'Forest']))
+        print(classification_report(all_ground_truth, all_predictions, target_names=classes))
         with open('normalized.pkl', 'wb') as this:
             pkl.dump(confusion_meter.value(), this, protocol=pkl.HIGHEST_PROTOCOL)
         with open('un_normalized.pkl', 'wb') as this:

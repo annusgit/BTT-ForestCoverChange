@@ -231,7 +231,7 @@ def convert_labels(label_im):
     return label_im
 
 
-def fix(target_image, total_labels=0):
+def fix(target_image):
     # we fix the label by
     # 1. Converting all NULL (0) pixels to Non-forest pixels (1)
     target_image[target_image == 0] = 1  # this will convert all null pixels to non-forest pixels
@@ -306,7 +306,7 @@ def get_dataloaders_raw(images_path, bands, labels_path, save_data_path, block_s
                                                     this_col*self.model_input_size:(this_col+1)*self.model_input_size,:]
                 this_label_subset = this_label[this_row*self.model_input_size:(this_row+1)*self.model_input_size,
                                                 this_col*self.model_input_size:(this_col+1)*self.model_input_size]
-                this_label_subset = fix(convert_labels(this_label_subset), total_labels=max_label)
+                this_label_subset = fix(convert_labels(this_label_subset))
 
                 # image_subset = np.asarray(255*(this_example_subset[:,:,[4,3,2]]/4096.0).clip(0, 1), dtype=np.uint8)
                 # pl.subplot(1, 2, 1)
@@ -335,7 +335,7 @@ def get_dataloaders_raw(images_path, bands, labels_path, save_data_path, block_s
                 this_example_subset, this_label_subset = crop_and_rotate(image=this_example, label=this_label,
                                                                          first_crop_size=block_size//2,
                                                                          model_input_size=model_input_size)
-                this_label_subset = fix(this_label_subset[:,:,0], total_labels=max_label)
+                this_label_subset = fix(this_label_subset[:,:,0])
 
                 # image_subset = np.asarray(255*(this_example_subset[:,:,[4,3,2]]/4096.0).clip(0, 1), dtype=np.uint8)
                 # pl.subplot(1, 2, 1)
@@ -420,8 +420,8 @@ def get_dataloaders_raw(images_path, bands, labels_path, save_data_path, block_s
     return train_dataloader, val_dataloader, test_dataloader
 
 
-def get_dataloaders_generated_data(generated_data_path, save_data_path, model_input_size=64, num_classes=4, train_split=0.8, one_hot=False,
-                                   batch_size=16, num_workers=4, max_label=3):
+def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, model_input_size, bands, num_classes, train_split, one_hot, batch_size,
+                                   num_workers):
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
@@ -433,9 +433,10 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
             self.total_images = 0
             self.stride = stride
             self.one_hot = one_hot
+            self.bands = [x-1 for x in bands]
             self.num_classes = num_classes
-            self.mode = mode
             self.transformation = transformation
+            self.mode = mode
 
             if os.path.exists(data_map_path):
                 print('LOG: Saved data map found! Loading now...')
@@ -476,41 +477,30 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                 (example_subset, label_subset) = pickle.load(this_pickle)
                 example_subset = np.nan_to_num(example_subset)
                 label_subset = np.nan_to_num(label_subset)
-            # get RGB bands only
-            # this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, 1:4]
-            # get all bands in the image
             this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
             # get more indices to add to the example, landsat-8
-            # ndvi_band = (this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+this_example_subset[:,:,3]+1e-7)
-            # evi_band = 2.5*(this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+6*this_example_subset[:,:,3]-7.5*this_example_subset[:,:,1]+1)
-            # savi_band = 1.5*(this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+this_example_subset[:,:,3]+0.5)
-            # msavi_band = 0.5*(2*this_example_subset[:,:,4]+1-np.sqrt((2*this_example_subset[:,:,4]+1)**2-8*(this_example_subset[:,:,4]-this_example_subset[:,:,3])))
-            # ndmi_band = (this_example_subset[:,:,4]-this_example_subset[:,:,5])/(this_example_subset[:,:,4]+this_example_subset[:,:,5]+1e-7)
-            # nbr_band = (this_example_subset[:,:,4]-this_example_subset[:,:,6])/(this_example_subset[:,:,4]+this_example_subset[:,:,6]+1e-7)
-            # nbr2_band = (this_example_subset[:,:,5]-this_example_subset[:,:,6])/(this_example_subset[:,:,5]+this_example_subset[:,:,6]+1e-7)
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndvi_band)))
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(evi_band)))
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(savi_band)))
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(msavi_band)))
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndmi_band)))
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
-            # this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
+            ndvi_band = (this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+this_example_subset[:,:,3]+1e-7)
+            evi_band = 2.5*(this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+6*this_example_subset[:,:,3]-7.5*this_example_subset[:,:,1]+1)
+            savi_band = 1.5*(this_example_subset[:,:,4]-this_example_subset[:,:,3])/(this_example_subset[:,:,4]+this_example_subset[:,:,3]+0.5)
+            msavi_band = 0.5*(2*this_example_subset[:,:,4]+1-np.sqrt((2*this_example_subset[:,:,4]+1)**2-8*(this_example_subset[:,:,4]-this_example_subset[:,:,3])))
+            ndmi_band = (this_example_subset[:,:,4]-this_example_subset[:,:,5])/(this_example_subset[:,:,4]+this_example_subset[:,:,5]+1e-7)
+            nbr_band = (this_example_subset[:,:,4]-this_example_subset[:,:,6])/(this_example_subset[:,:,4]+this_example_subset[:,:,6]+1e-7)
+            nbr2_band = (this_example_subset[:,:,5]-this_example_subset[:,:,6])/(this_example_subset[:,:,5]+this_example_subset[:,:,6]+1e-7)
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndvi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(evi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(savi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(msavi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndmi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
+            # at this point, we pick which bands to forward based on command-line argument
+            this_example_subset = this_example_subset[:,:,self.bands]
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
-            if self.mode == 'train':
-                this_label_subset = fix(this_label_subset, total_labels=max_label).astype(np.uint8)
-
-            # if self.mode != 'train':
-            #     these_labels, their_frequency = np.unique(this_label_subset, return_counts=True)
-            #     print(these_labels, their_frequency)
-            # reject all noisy pixels
-            # if 0 in these_labels:
-            #     self.__getitem__(np.random.randint(self.__len__()))
-            # this_label_subset = this_label_subset//2 # convert 1, 2 to 0, 1
-
             if self.one_hot:
                 this_label_subset = np.eye(self.num_classes)[this_label_subset]
-
             if self.mode == 'train':
+                # Convert NULL-pixels to Non-Forest Class only during training
+                this_label_subset = fix(this_label_subset).astype(np.uint8)
                 # augmentation
                 if np.random.randint(0, 2) == 0:
                     # print('flipped this')
@@ -529,7 +519,6 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
                     this_example_subset = np.flipud(this_example_subset).copy()
                     this_label_subset = np.flipud(this_label_subset).copy()
                 pass
-
             # print(this_label_subset.shape, this_example_subset.shape)
             this_example_subset, this_label_subset = toTensor(image=this_example_subset, label=this_label_subset, one_hot=self.one_hot)
             # if self.transformation:
@@ -539,77 +528,39 @@ def get_dataloaders_generated_data(generated_data_path, save_data_path, model_in
         def __len__(self):
             return 1*self.total_images if self.mode == 'train' else self.total_images
     ######################################################################################
-
-    # palsar_mean = torch.Tensor([8116.269912828, 3419.031791692, 40.270058337])
-    # palsar_std = torch.Tensor([6136.70160067, 2201.432263753, 19.38761076])
-    # palsar_gamma_naught_mean = [-7.68182243, -14.59668144, 40.44296671]
-    # palsar_gamma_naught_std = [3.78577892, 4.27134019, 19.73628546]
-
-    # transformation = transforms.Compose([transforms.Normalize(mean=palsar_gamma_naught_mean,
-    #                                                           std=palsar_gamma_naught_std)])
     transformation = None
-
     train_list, eval_list, test_list, temp_list = [], [], [], []
-    if not os.path.exists(save_data_path):
-        os.mkdir(save_data_path)
-        print('LOG: No saved data found. Making new data directory {}'.format(save_data_path))
-        # full_list = [os.path.join(generated_data_path, x) for x in os.listdir(generated_data_path)]
-        # random.shuffle(full_list)
-        # train_list = full_list[:int(len(full_list)*train_split)]
-        # eval_list = full_list[int(len(full_list)*train_split):]
-        # train_years = ["2015"]
-        # eval_years = ["2016", "2017"]
-        # train_list_per_year = [os.path.join(generated_data_path, year) for year in train_years]
-        # eval_list_per_year = [os.path.join(generated_data_path, year) for year in eval_years]
-        # train_list = [os.path.join(per_year_train_folder, x) for per_year_train_folder in train_list_per_year
-        #               for x in os.listdir(per_year_train_folder)]
-        # eval_list = [os.path.join(per_year_eval_folder, x) for per_year_eval_folder in eval_list_per_year
-        #              for x in os.listdir(per_year_eval_folder)]
-
-        # year = '2016'
-        extended_data_path = generated_data_path  # os.path.join(generated_data_path, year)
+    if not os.path.exists(data_split_lists_path):
+        os.mkdir(data_split_lists_path)
+        print('LOG: No saved data found. Making new data directory {}'.format(data_split_lists_path))
+        extended_data_path = generated_data_path
         full_examples_list = [os.path.join(extended_data_path, x) for x in os.listdir(extended_data_path)]
-        # print('we are here', len(full_examples_list))
         random.shuffle(full_examples_list)
-        # print(len(full_examples_list))
         train_split = int(train_split*len(full_examples_list))
-        # print(train_split)
-        # print("(DEBUG): ", full_examples_list)
         train_list = full_examples_list[:train_split]
         temp_list = full_examples_list[train_split:]
         eval_list = temp_list[0:len(temp_list)//2]
         test_list = temp_list[len(temp_list)//2:]
     ######################################################################################
-
     print('LOG: [train_list, eval_list, test_list] ->', len(train_list), len(eval_list), len(test_list))
     print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
     print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
     print('LOG: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))
-
     # create dataset class instances
     # images_per_image means approx. how many images are in each example
-    train_data = dataset(data_list=train_list, data_map_path=os.path.join(save_data_path, 'train_datamap.pkl'), mode='train', stride=8,
+    train_data = dataset(data_list=train_list, data_map_path=os.path.join(data_split_lists_path, 'train_datamap.pkl'), mode='train', stride=8,
                          transformation=transformation)  # more images for training
-    eval_data = dataset(data_list=eval_list, data_map_path=os.path.join(save_data_path, 'eval_datamap.pkl'), mode='test', stride=model_input_size,
+    eval_data = dataset(data_list=eval_list, data_map_path=os.path.join(data_split_lists_path, 'eval_datamap.pkl'), mode='test', stride=model_input_size,
                         transformation=transformation)
-    test_data = dataset(data_list=test_list, data_map_path=os.path.join(save_data_path, 'test_datamap.pkl'), mode='test', stride=model_input_size,
+    test_data = dataset(data_list=test_list, data_map_path=os.path.join(data_split_lists_path, 'test_datamap.pkl'), mode='test', stride=model_input_size,
                         transformation=transformation)
     print('LOG: [train_data, eval_data, test_data] ->', len(train_data), len(eval_data), len(test_data))
-    # print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
-    # print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
-    # print('LOG: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))
-
-    # for j in range(10):
-    #     print(train_data[j])
-    # for j in range(len(eval_data)):
-    #     print(eval_data[j])
-    # for j in range(len(test_data)):
-    #     print(test_data[j])
-
+    print('LOG: Data Split Integrity: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
+    print('LOG: Data Split Integrity: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
+    print('LOG: Data Split Integrity: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))
     train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     val_dataloader = DataLoader(dataset=eval_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-
     return train_dataloader, val_dataloader, test_dataloader
 
 
@@ -617,7 +568,7 @@ def check_generated_fnf_datapickle(example_path):
     with open(example_path, 'rb') as this_pickle:
         (example_subset, label_subset) = pickle.load(this_pickle)
         example_subset = np.nan_to_num(example_subset)
-        label_subset = fix(np.nan_to_num(label_subset), None)
+        label_subset = fix(np.nan_to_num(label_subset))
     # print(example_subset)
     this = np.asarray(255*(example_subset[:,:,[3,2,1]]), dtype=np.uint8)
     that = label_subset

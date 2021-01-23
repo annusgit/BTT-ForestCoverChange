@@ -158,7 +158,7 @@ if __name__ == "__main__":
     datapoints, labels = load_or_create_dataset(this_dataset)
     for this_model in classifiers:
         for these_bands in band_combinations:
-            process_name = f"{this_model}_{this_dataset}_C1W_{class_1_weight}_C2W_{class_2_weight}"
+            process_name = f"{this_model}_{this_dataset}_{these_bands}_C1W_{class_1_weight}_C2W_{class_2_weight}"
             train_stat_model(this_dataset, this_model, these_bands, class_1_weight, class_2_weight, datapoints_as_array=datapoints, labels_as_array=labels,
                              process_name=process_name)
             pass

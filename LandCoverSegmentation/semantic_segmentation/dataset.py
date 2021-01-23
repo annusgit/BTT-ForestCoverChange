@@ -494,7 +494,7 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
             # at this point, we pick which bands to forward based on command-line argument
-            this_example_subset = this_example_subset[:,:,self.bands]
+            this_example_subset = this_example_subset[:, :, self.bands]
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
             if self.one_hot:
                 this_label_subset = np.eye(self.num_classes)[this_label_subset]

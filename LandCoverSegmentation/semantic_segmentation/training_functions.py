@@ -45,7 +45,8 @@ def train_net(model, model_topology, generated_data_path, input_dim, bands, clas
     LR_decay = (lr_final / lr) ** (1. / epochs)
     scheduler = lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=LR_decay)
     loaders = get_dataloaders_generated_data(generated_data_path=generated_data_path, data_split_lists_path=data_split_lists, model_input_size=input_dim,
-                                             bands=bands, batch_size=batch_size, num_classes=len(classes), train_split=0.8, one_hot=True, num_workers=workers)
+                                             bands=bands, batch_size=batch_size, num_classes=len(classes)+1, train_split=0.8, one_hot=True,
+                                             num_workers=workers)
     train_loader, val_dataloader, test_loader = loaders
     best_evaluation = 0.0
     ################################################################
@@ -70,7 +71,7 @@ def train_net(model, model_topology, generated_data_path, input_dim, bands, clas
         eval_net(model=model, classes=classes, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
                  batch_size=batch_size, step=k)
         model_number += 1
-        model_path = os.path.join(save_dir, 'model-{}-{}-{}.pt'.format(model_number, model_topology, lr_initial))
+        model_path = os.path.join(save_dir, 'model-{}-topology({})-lr({})-bands({}).pt'.format(model_number, model_topology, lr_initial, len(bands)))
         torch.save(model.state_dict(), model_path)
         print('log: Saved best performing {}'.format(model_path))
         # we will save all models for now

@@ -226,11 +226,6 @@ def crop_and_rotate(**kwargs):
     return croped_image.copy(), croped_label.copy()
 
 
-def convert_labels(label_im):
-    label_im = np.asarray(label_im/10, dtype=np.uint8)
-    return label_im
-
-
 def fix(target_image):
     # we fix the label by
     # 1. Converting all NULL (0) pixels to Non-forest pixels (1)
@@ -251,173 +246,6 @@ def toTensor(**kwargs):
         label = label.transpose((2, 0, 1))
         return torch.from_numpy(image).float(), torch.from_numpy(label).float()
     return torch.from_numpy(image).float(), torch.from_numpy(label).long()
-
-
-def get_dataloaders_raw(images_path, bands, labels_path, save_data_path, block_size=256, model_input_size=64, train_split=0.8, batch_size=16,
-                        num_workers=4, max_label=22):
-
-    # This function is veryyy slow because it reads in the whole image for each example
-
-    print('inside dataloading code...')
-    class dataset(Dataset):
-        def __init__(self, data_list, image_path, label_image, mode='train'):
-            '''
-            :param data_list: list of all
-            :param raster_bands: raster bands list of examples image
-            :param raster_size: raster spatial size
-            :param model_input_size: size of image input to the model
-            :param label_image: label image numpy array
-            :param mode: train or test?
-            '''
-            super(dataset, self).__init__()
-            self.data_list = data_list
-            self.image_path = image_path
-            # self.image_ds = gdal.Open(images_path)
-            # self.raster_bands = [self.image_ds.GetRasterBand(x) for x in bands]
-            self.block_size = block_size
-            self.label_image = label_image
-            self.model_input_size = model_input_size
-            # this is just a rough estimate, actual augmentation will result in many more images
-            self.images_per_dimension = self.block_size//model_input_size
-            self.total_images = self.images_per_dimension * self.images_per_dimension * len(self.data_list)
-            self.mode = mode
-            # print(len(self), len(data_list))
-            pass
-
-        def __getitem__(self, k):
-            image_ds = gdal.Open(self.image_path)
-            raster_bands = [image_ds.GetRasterBand(x) for x in bands]
-            if self.mode == 'test':
-                # 1. find out which image subset is it and then crop out that area first
-                # no augmentation here, just stride-wise cropping out subset images
-                this_block = int(k/self.images_per_dimension**2)
-                _, example_indices, label_indices = self.data_list[this_block]
-                this_example = np.nan_to_num(raster_bands[0].ReadAsArray(*example_indices))
-                for band in raster_bands[1:]:
-                    this_example = np.dstack((this_example, np.nan_to_num(band.ReadAsArray(*example_indices))))
-                this_label = self.label_image[label_indices[0]:label_indices[1], label_indices[2]:label_indices[3]]
-
-                # 2. next find out which sub-subset is it and crop it out
-                subset_sum = k % int(self.images_per_dimension**2)
-                this_row = subset_sum // self.images_per_dimension
-                this_col = subset_sum % self.images_per_dimension
-
-                this_example_subset = this_example[this_row*self.model_input_size:(this_row+1)*self.model_input_size,
-                                                    this_col*self.model_input_size:(this_col+1)*self.model_input_size,:]
-                this_label_subset = this_label[this_row*self.model_input_size:(this_row+1)*self.model_input_size,
-                                                this_col*self.model_input_size:(this_col+1)*self.model_input_size]
-                this_label_subset = fix(convert_labels(this_label_subset))
-
-                # image_subset = np.asarray(255*(this_example_subset[:,:,[4,3,2]]/4096.0).clip(0, 1), dtype=np.uint8)
-                # pl.subplot(1, 2, 1)
-                # pl.imshow(image_subset)
-                # pl.subplot(1, 2, 2)
-                # pl.imshow(this_label_subset)
-                # pl.show()
-                this_example_subset, this_label_subset = toTensor(image=this_example_subset, label=this_label_subset)
-                image_ds = None
-                return {'input': this_example_subset, 'label': this_label_subset}
-
-            elif self.mode == 'train':
-                # total images are 64 and x25 for augmentation
-                subset_image_index = k % len(self.data_list)
-                _, example_indices, label_indices = self.data_list[subset_image_index]
-
-                # 1. get the whole training block first
-                this_example = np.nan_to_num(raster_bands[0].ReadAsArray(*example_indices))
-                for band in raster_bands[1:]:
-                    this_example = np.dstack((this_example, np.nan_to_num(band.ReadAsArray(*example_indices))))
-
-                this_label = self.label_image[label_indices[0]:label_indices[1], label_indices[2]:label_indices[3]]
-                this_label = convert_labels(this_label)
-
-                # 2. Next step, crop out from anywhere and get an augmented image and label
-                this_example_subset, this_label_subset = crop_and_rotate(image=this_example, label=this_label,
-                                                                         first_crop_size=block_size//2,
-                                                                         model_input_size=model_input_size)
-                this_label_subset = fix(this_label_subset[:,:,0])
-
-                # image_subset = np.asarray(255*(this_example_subset[:,:,[4,3,2]]/4096.0).clip(0, 1), dtype=np.uint8)
-                # pl.subplot(1, 2, 1)
-                # pl.imshow(image_subset)
-                # pl.subplot(1, 2, 2)
-                # pl.imshow(this_label_subset)
-                # pl.show()
-
-                this_example_subset, this_label_subset = toTensor(image=this_example_subset, label=this_label_subset)
-                image_ds = None
-                return {'input': this_example_subset, 'label': this_label_subset}
-            else:
-                image_ds = None
-                return -1
-
-        def __len__(self):
-            # x25 for training images because of augmentation
-            return 25*self.total_images if self.mode == 'train' else self.total_images
-    ######################################################################################
-    # generate training and testing lists here
-    error_pixels = 50  # add this to remove the error pixels at the boundary of the test image
-    image_ds = gdal.Open(images_path)
-    x_size, y_size = image_ds.RasterXSize, image_ds.RasterYSize
-    if not os.path.exists(save_data_path):
-        print('LOG: No Saved Data Found! Generating Now...')
-        all_examples = []
-        count = -1
-        for i in range(y_size//block_size):
-            for j in range(x_size//block_size):
-                count += 1
-                # tuple -> [image_subset_indices, label_subset_indices]
-                all_examples.append((count, (j*block_size+error_pixels, i*block_size+error_pixels, block_size, block_size),
-                                     (i*block_size+error_pixels,(i+1)*block_size+error_pixels, j*block_size+error_pixels,(j+1)*block_size+error_pixels)))
-        print('LOG: total examples:', len(all_examples))
-        train_test_split = int(train_split*len(all_examples))
-        random.shuffle(all_examples)
-        train_eval_list = all_examples[:train_test_split]
-        test_list = all_examples[train_test_split:]
-        train_eval_split = int(train_split*len(train_eval_list))  # 10% of training examples are for validation
-        random.shuffle(train_eval_list)
-        train_list = train_eval_list[:train_eval_split]
-        eval_list = train_eval_list[train_eval_split:]
-        with open(save_data_path, 'wb') as save_pickle:
-            pickle.dump((train_list, eval_list, test_list), file=save_pickle, protocol=pickle.HIGHEST_PROTOCOL)
-        print('LOG: Data saved!')
-    else:
-        print('LOG: Found Saved Data! Loading Now...')
-        with open(save_data_path, 'rb') as save_pickle:
-            train_list, eval_list, test_list = pickle.load(save_pickle)
-
-    print('LOG: [train_list, eval_list, test_list] ->', len(train_list), len(eval_list), len(test_list))
-    print('LOG: set(train_list).isdisjoint(set(eval_list)) ->', set(train_list).isdisjoint(set(eval_list)))
-    print('LOG: set(train_list).isdisjoint(set(test_list)) ->', set(train_list).isdisjoint(set(test_list)))
-    print('LOG: set(test_list).isdisjoint(set(eval_list)) ->', set(test_list).isdisjoint(set(eval_list)))
-    ######################################################################################
-    # print([index for (index, tup1, tup2) in train_list])
-    # print([index for (index, tup1, tup2) in eval_list])
-    # print([index for (index, tup1, tup2) in test_list])
-
-    # load the label image
-    re_label = np.load(labels_path)
-    # re_label = misc.imresize(re_label, size=(y_size, x_size), interp='nearest')
-    re_label = ndimage.median_filter(re_label, size=7)
-
-    # create dataset class instances
-    # images_per_image means approx. how many images are in each example
-    train_data = dataset(data_list=train_list, image_path=images_path, label_image=re_label, mode='train')
-    eval_data = dataset(data_list=eval_list, image_path=images_path, label_image=re_label, mode='test')
-    test_data = dataset(data_list=test_list, image_path=images_path, label_image=re_label, mode='test')
-
-    # for j in range(10):
-    #     print(train_data[j])
-    # for j in range(len(eval_data)):
-    #     print(eval_data[j])
-    # for j in range(len(test_data)):
-    #     print(test_data[j])
-
-    train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    val_dataloader = DataLoader(dataset=eval_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-
-    return train_dataloader, val_dataloader, test_dataloader
 
 
 def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, model_input_size, bands, num_classes, train_split, one_hot, batch_size,
@@ -496,8 +324,6 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             # at this point, we pick which bands to forward based on command-line argument
             this_example_subset = this_example_subset[:, :, self.bands]
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
-            if self.one_hot:
-                this_label_subset = np.eye(self.num_classes)[this_label_subset]
             if self.mode == 'train':
                 # Convert NULL-pixels to Non-Forest Class only during training
                 this_label_subset = fix(this_label_subset).astype(np.uint8)
@@ -519,6 +345,8 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
                     this_example_subset = np.flipud(this_example_subset).copy()
                     this_label_subset = np.flipud(this_label_subset).copy()
                 pass
+            if self.one_hot:
+                this_label_subset = np.eye(self.num_classes)[this_label_subset]
             # print(this_label_subset.shape, this_example_subset.shape)
             this_example_subset, this_label_subset = toTensor(image=this_example_subset, label=this_label_subset, one_hot=self.one_hot)
             # if self.transformation:

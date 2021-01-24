@@ -71,7 +71,7 @@ def train_net(model, model_topology, generated_data_path, input_dim, bands, clas
         eval_net(model=model, classes=classes, criterion=focal_criterion, val_loader=val_dataloader, cuda=cuda, device=device, writer=None,
                  batch_size=batch_size, step=k)
         model_number += 1
-        model_path = os.path.join(save_dir, 'model_{}_topology:{}_lr:{}_bands:{}.pt'.format(model_number, model_topology, lr_initial, len(bands)))
+        model_path = os.path.join(save_dir, 'model_{}_topology{}_lr{}_bands{}.pt'.format(model_number, model_topology, lr_initial, len(bands)))
         torch.save(model.state_dict(), model_path)
         print('log: Saved best performing {}'.format(model_path))
         # we will save all models for now

@@ -77,7 +77,7 @@ def get_inference_loader(rasterized_shapefiles_path, district, image_path, model
             os.mkdir(self.temp_dir)
             print('LOG: Generating data map now...')
             image_ds = gdal.Open(image_path, gdal.GA_ReadOnly)
-            all_raster_bands = [image_ds.GetRasterBand(x).ReadAsArray() for x in bands]
+            all_raster_bands = [image_ds.GetRasterBand(x+1).ReadAsArray() for x in range(image_ds.RasterCount)]
             # test_image = np.nan_to_num(all_raster_bands[0].ReadAsArray())
             # for band in all_raster_bands[1:]:
             #     test_image = np.dstack((test_image, np.nan_to_num(band.ReadAsArray())))

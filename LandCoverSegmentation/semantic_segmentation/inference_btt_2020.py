@@ -68,7 +68,7 @@ def get_inference_loader(rasterized_shapefiles_path, district, image_path, model
             self.all_images = []
             self.total_images = 0
             self.stride = stride
-            self.bands = bands
+            self.bands = [int(this_band) - 1 for this_band in bands]  # 1-18 -> 0-17
             self.num_classes = num_classes
             self.transformation = transformation
             self.temp_dir = 'temp_numpy_saves'

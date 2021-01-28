@@ -195,7 +195,7 @@ def run_inference(args):
             # save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(district, year))
             # np.save(save_path, generated_map)
             #########################################################################################3
-            inference_loader.dataset.clear_mem()
+            # inference_loader.dataset.clear_mem()
             pass
         pass
     pass

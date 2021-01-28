@@ -22,11 +22,10 @@ import pickle as pkl
 from loss import FocalLoss2d
 from model import UNet
 
-rasterized_shapefiles_path = "/home/azulfiqar_bee15seecs/District_Shapefiles_as_Clipping_bands/"
 FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
 
 
-def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands_list):
+def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, district, this_landsat8_bands_list):
     this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
     ds = gdal.Open(this_shapefile_path)
     assert ds.RasterCount == 1
@@ -41,9 +40,10 @@ def mask_landsat8_image_using_rasterized_shapefile(district, this_landsat8_bands
     diff_x_before, diff_y_before = diff_x//2, diff_y//2
     clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x-diff_x_before), (diff_y_before, diff_y-diff_y_before)], mode='constant')
                                      for x in clipped_full_spectrum]
+    clipped_shapefile_mask_resized = np.pad(shapefile_mask, [(diff_x_before, diff_x-diff_x_before), (diff_y_before, diff_y-diff_y_before)], mode='constant')
     clipped_full_spectrum_stacked_image = np.dstack(clipped_full_spectrum_resized)
     print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_stacked_image.shape))
-    return clipped_full_spectrum_stacked_image
+    return clipped_full_spectrum_stacked_image, clipped_shapefile_mask_resized
 
 
 def toTensor(**kwargs):
@@ -56,19 +56,19 @@ def toTensor(**kwargs):
     return torch.from_numpy(image).float()
 
 
-def get_inference_loader(district, image_path, model_input_size=128, num_classes=3, one_hot=False, batch_size=64, num_workers=4):
+def get_inference_loader(rasterized_shapefiles_path, district, image_path, model_input_size, bands, num_classes, batch_size, num_workers):
 
     # This function is faster because we have already saved our data as subset pickle files
     print('inside dataloading code...')
     class dataset(Dataset):
-        def __init__(self, image_path, bands, stride=model_input_size, transformation=None):
+        def __init__(self, rasterized_shapefiles_path, image_path, bands, stride, transformation):
             super(dataset, self).__init__()
             self.model_input_size = model_input_size
             self.image_path = image_path
             self.all_images = []
             self.total_images = 0
             self.stride = stride
-            self.one_hot = one_hot
+            self.bands = bands
             self.num_classes = num_classes
             self.transformation = transformation
             self.temp_dir = 'temp_numpy_saves'
@@ -82,7 +82,8 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
             # for band in all_raster_bands[1:]:
             #     test_image = np.dstack((test_image, np.nan_to_num(band.ReadAsArray())))
             # mask the image and adjust its size at this point
-            test_image = mask_landsat8_image_using_rasterized_shapefile(district=district, this_landsat8_bands_list=all_raster_bands)
+            test_image, self.adjustment_mask = mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path=rasterized_shapefiles_path,
+                                                                                              district=district, this_landsat8_bands_list=all_raster_bands)
             temp_image_path = os.path.join(self.temp_dir, 'temp_image.npy')
             np.save(temp_image_path, test_image)
             self.temp_test_image = np.load(temp_image_path, mmap_mode='r')
@@ -99,46 +100,26 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
         def __getitem__(self, k):
             (this_row, this_col) = self.all_images[k]
             this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
-            # get more indices to add to the example
-            # ndvi_band = (this_example_subset[:, :, 4] -
-            #              this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
-            #                                               this_example_subset[:, :, 3] + 1e-7)
-            # evi_band = 2.5 * (this_example_subset[:, :, 4] -
-            #                   this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
-            #                                                    6 * this_example_subset[:, :, 3] -
-            #                                                    7.5 * this_example_subset[:, :, 1] + 1)
-            # savi_band = 1.5 * (this_example_subset[:, :, 4] -
-            #                    this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] +
-            #                                                     this_example_subset[:, :, 3] + 0.5)
-            # msavi_band = 0.5 * (2 * this_example_subset[:, :, 4] + 1 -
-            #                     np.sqrt((2 * this_example_subset[:, :, 4] + 1) ** 2 -
-            #                             8 * (this_example_subset[:, :, 4] -
-            #                                  this_example_subset[:, :, 3])))
-            # ndmi_band = (this_example_subset[:, :, 4] -
-            #              this_example_subset[:, :, 5]) / (this_example_subset[:, :, 4] +
-            #                                               this_example_subset[:, :, 5] + 1e-7)
-            # nbr_band = (this_example_subset[:, :, 4] -
-            #             this_example_subset[:, :, 6]) / (this_example_subset[:, :, 4] +
-            #                                              this_example_subset[:, :, 6] + 1e-7)
-            # nbr2_band = (this_example_subset[:, :, 5] -
-            #              this_example_subset[:, :, 6]) / (this_example_subset[:, :, 5] +
-            #                                               this_example_subset[:, :, 6] + 1e-7)
-            # ndvi_band = np.nan_to_num(ndvi_band)
-            # evi_band = np.nan_to_num(evi_band)
-            # savi_band = np.nan_to_num(savi_band)
-            # msavi_band = np.nan_to_num(msavi_band)
-            # ndmi_band = np.nan_to_num(ndmi_band)
-            # nbr_band = np.nan_to_num(nbr_band)
-            # nbr2_band = np.nan_to_num(nbr2_band)
-            # this_example_subset = np.dstack((this_example_subset, ndvi_band))
-            # this_example_subset = np.dstack((this_example_subset, evi_band))
-            # this_example_subset = np.dstack((this_example_subset, savi_band))
-            # this_example_subset = np.dstack((this_example_subset, msavi_band))
-            # this_example_subset = np.dstack((this_example_subset, ndmi_band))
-            # this_example_subset = np.dstack((this_example_subset, nbr_band))
-            # this_example_subset = np.dstack((this_example_subset, nbr2_band))
-            # # rescale like the original dataset used for training
-            # this_example_subset = this_example_subset / 1000
+            # get more indices to add to the example, landsat-8
+            ndvi_band = (this_example_subset[:, :, 4] - this_example_subset[:, :, 3]) / (this_example_subset[:, :, 4] + this_example_subset[:, :, 3] + 1e-7)
+            evi_band = 2.5 * (this_example_subset[:, :, 4] - this_example_subset[:, :, 3]) / (
+                        this_example_subset[:, :, 4] + 6 * this_example_subset[:, :, 3] - 7.5 * this_example_subset[:, :, 1] + 1)
+            savi_band = 1.5 * (this_example_subset[:, :, 4] - this_example_subset[:, :, 3]) / (
+                        this_example_subset[:, :, 4] + this_example_subset[:, :, 3] + 0.5)
+            msavi_band = 0.5 * (2 * this_example_subset[:, :, 4] + 1 - np.sqrt(
+                (2 * this_example_subset[:, :, 4] + 1) ** 2 - 8 * (this_example_subset[:, :, 4] - this_example_subset[:, :, 3])))
+            ndmi_band = (this_example_subset[:, :, 4] - this_example_subset[:, :, 5]) / (this_example_subset[:, :, 4] + this_example_subset[:, :, 5] + 1e-7)
+            nbr_band = (this_example_subset[:, :, 4] - this_example_subset[:, :, 6]) / (this_example_subset[:, :, 4] + this_example_subset[:, :, 6] + 1e-7)
+            nbr2_band = (this_example_subset[:, :, 5] - this_example_subset[:, :, 6]) / (this_example_subset[:, :, 5] + this_example_subset[:, :, 6] + 1e-7)
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndvi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(evi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(savi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(msavi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndmi_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
+            this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
+            # at this point, we pick which bands to forward based on command-line argument
+            this_example_subset = this_example_subset[:, :, self.bands]
             this_example_subset = toTensor(image=this_example_subset)
             return {'coordinates': np.asarray([this_row, this_row + self.model_input_size, this_col, this_col + self.model_input_size]),
                     'input': this_example_subset}
@@ -157,16 +138,17 @@ def get_inference_loader(district, image_path, model_input_size=128, num_classes
     transformation = None
     ######################################################################################
     # create dataset class instances
-    inference_data = dataset(image_path=image_path, bands=[x for x in range(1, 12)], transformation=transformation)
+    inference_data = dataset(rasterized_shapefiles_path=rasterized_shapefiles_path, image_path=image_path, bands=bands, stride=model_input_size,
+                             transformation=transformation)
     print('LOG: inference_data ->', len(inference_data))
     inference_loader = DataLoader(dataset=inference_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    return inference_loader
+    return inference_loader, inference_data.adjustment_mask
 
 
 @torch.no_grad()
 def run_inference(args):
-    model = UNet(input_channels=11, num_classes=3)
-    model.load_state_dict(torch.load(args.model_path), strict=False) # map_location='cpu'), strict=False)
+    model = UNet(topology=args.model_topology, input_channels=len(args.bands), num_classes=len(args.classes))
+    model.load_state_dict(torch.load(args.model_path), strict=False)  # map_location='cpu'), strict=False)
     print('Log: Loaded pretrained {}'.format(args.model_path))
     model.eval()
     if args.cuda:
@@ -179,9 +161,10 @@ def run_inference(args):
     for district in all_districts:
         for year in years:
             print("(LOG): On District: {} @ Year: {}".format(district, year))
-            test_image_path = os.path.join(args.dir_path, 'landsat8_4326_30_{}_region_{}.tif'.format(year, district))
-            inference_loader = get_inference_loader(district=district, image_path=test_image_path, model_input_size=128, num_classes=3, one_hot=True,
-                                                    batch_size=args.bs, num_workers=4)
+            test_image_path = os.path.join(args.data_path, 'landsat8_4326_30_{}_region_{}.tif'.format(year, district))
+            inference_loader, adjustment_mask = get_inference_loader(rasterized_shapefiles_path=args.rasterized_shapefiles_path, district=district,
+                                                                     image_path=test_image_path, model_input_size=128, bands=args.bands,
+                                                                     num_classes=len(args.classes), batch_size=args.bs, num_workers=4)
             # we need to fill our new generated test image
             generated_map = np.empty(shape=inference_loader.dataset.get_image_size())
             for idx, data in enumerate(inference_loader):
@@ -195,15 +178,17 @@ def run_inference(args):
                 for k in range(test_x.shape[0]):
                     x, x_, y, y_ = coordinates[k]
                     generated_map[x:x_, y:y_] = pred_numpy[:,:,k]
-
+            # adjust the inferred map
+            generated_map += 1  # to make forest pixels: 2, non-forest pixels: 1, null pixels: 0
+            generated_map = np.multiply(generated_map, adjustment_mask)
             # save generated map as png image, not numpy array
             forest_map_rband = np.zeros_like(generated_map)
             forest_map_gband = np.zeros_like(generated_map)
             forest_map_bband = np.zeros_like(generated_map)
-            forest_map_rband[generated_map == NON_FOREST_LABEL] = 255
             forest_map_gband[generated_map == FOREST_LABEL] = 255
+            forest_map_rband[generated_map == NON_FOREST_LABEL] = 255
             forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
-            save_this_map_path = os.path.join(args.dest, '{}_{}.png'.format(district, year))
+            save_this_map_path = os.path.join(args.dest, '{}_{}_inferred_map.png'.format(district, year))
             matimg.imsave(save_this_map_path, forest_map_for_visualization)
             print('Saved: {} @ {}'.format(save_this_map_path, forest_map_for_visualization.shape))
             # save_path = os.path.join(args.dest, 'generated_map_{}_{}.npy'.format(district, year))
@@ -217,10 +202,14 @@ def run_inference(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--m', '--model', dest='model_path', type=str)
-    parser.add_argument('--d', dest='dir_path', type=str)
-    parser.add_argument('--s', dest='dest', type=str)
-    parser.add_argument('--b', dest='bs', type=int)
+    parser.add_argument('--data_path', dest='data_path', type=str)
+    parser.add_argument('--shapefiles', dest='rasterized_shapefiles_path', type=str)
+    parser.add_argument('--topology', dest='model_topology')
+    parser.add_argument('--bands', dest='bands', nargs='+', type=int)
+    parser.add_argument('--classes', dest='classes', nargs='+', type=str)
+    parser.add_argument('--model', dest='model_path', type=str)
+    parser.add_argument('--destination', dest='dest', type=str)
+    parser.add_argument('--batch_size', dest='bs', type=int)
     parser.add_argument('--cuda', dest='cuda', type=int)
     parser.add_argument('--device', dest='device', type=int)
     args = parser.parse_args()

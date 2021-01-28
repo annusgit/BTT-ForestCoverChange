@@ -23,7 +23,8 @@ from sklearn.svm import SVC
 
 def print_to_file(this_str, file_name):
     print(this_str)
-    print(this_str, file=open(file_name, "a"))
+    print(this_str, file=open(os.path.join("E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/",
+                                           file_name), "a"))
 
 
 def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test, y_test, process_name):
@@ -33,11 +34,11 @@ def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test,
     y_pred = trained_classifier.predict(x_test)
     # get an accuracy score please
     accuracy = accuracy_score(y_true=y_test, y_pred=y_pred)
-    print_to_file('Model Accuracy: {:.2f}%'.format(100*accuracy), file_name=f"{process_name}.txt")
     # get confusion matrix
     confusion_matrix_to_print = confusion_matrix(y_test, y_pred)
     # show confusion matrix and classification report for precision, recall, F1-score
     print_to_file("################################ {} ################################".format(name), file_name=f"{process_name}.txt")
+    print_to_file('Model Accuracy: {:.2f}%'.format(100*accuracy), file_name=f"{process_name}.txt")
     print_to_file('Confusion Matrix', file_name=f"{process_name}.txt")
     print_to_file(confusion_matrix_to_print, file_name=f"{process_name}.txt")
     print_to_file('Classification Report', file_name=f"{process_name}.txt")
@@ -106,29 +107,31 @@ def load_or_create_dataset(this_dataset):
         print("(LOG): Compiled and Serialized New Dataset Successfully!")
     # fix before return
     labels_as_array[labels_as_array == 0] = 1
+    labels_as_array -= 1  # all labels should be 0 or 1 (non-Forest, Forest)
     return datapoints_as_array, labels_as_array
 
 
 def train_stat_model(this_dataset, this_model, these_bands, class_1_weight, class_2_weight, datapoints_as_array, labels_as_array, process_name):
-    model_path = f"E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/{process_name}.pkl"
+    model_path = f"E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/" \
+                 f"{process_name}-{these_bands}.pkl"
     assert this_model == "SVC" or this_model == "Perceptron" or this_model == "GaussianNB" or this_model == "LogisticRegression" or \
            this_model == "DecisionTreeClassifier" or this_model == "RandomForestClassifier"
-    assert these_bands == "rgb" or these_bands == "full-spectrum" or these_bands == "augmented"
+    assert these_bands == "rgb" or these_bands == "full-spectrum" or these_bands == "augmented" or these_bands == "extended"
     print_to_file(f"(LOG): Parameters: {this_dataset} dataset with {this_model} and {these_bands} bands using C1W: {class_1_weight} and C2W: "
                   f"{class_2_weight}", file_name=f"{process_name}.txt")
     print_to_file(f"(LOG): Will save trained model @ {model_path}", file_name=f"{process_name}.txt")
     # raw_dataset_path = "/home/azulfiqar_bee15seecs/training_data/pickled_clipped_training_data"
     # processed_dataset_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/1M_dataset.pkl"
     # model_path = "/home/azulfiqar_bee15seecs/training_data/statistical_models_dataset/logistic_regressor.pkl"
-    bands_lists = {"rgb": [3, 2, 1], "full-spectrum": [*range(11)], "augmented": [*range(18)]}
+    bands_lists = {"rgb": [3, 2, 1], "full-spectrum": [*range(11)], "augmented": [*range(18)], "extended": [*range(11, 18)]}
     # get your model (RandomForestClassifier, DecisionTreeClassifier, SVC, GaussianNB, LogisticRegression, Perceptron)
     classifiers = {
-        "SVC": SVC(verbose=1, class_weight={1: class_1_weight, 2: class_2_weight}),
-        "Perceptron": Perceptron(verbose=1, n_jobs=4, class_weight={1: class_1_weight, 2: class_2_weight}),
+        "SVC": SVC(verbose=1, class_weight={0: class_1_weight, 1: class_2_weight}),
+        "Perceptron": Perceptron(verbose=1, n_jobs=4, class_weight={0: class_1_weight, 1: class_2_weight}),
         "GaussianNB": GaussianNB(),
-        "LogisticRegression": LogisticRegression(verbose=1, n_jobs=4, max_iter=1000, solver='lbfgs', class_weight={1: class_1_weight, 2: class_2_weight}),
-        "DecisionTreeClassifier": DecisionTreeClassifier(class_weight={1: class_1_weight, 2: class_2_weight}),
-        "RandomForestClassifier": RandomForestClassifier(verbose=1, n_jobs=4, class_weight={1: class_1_weight, 2: class_2_weight}),
+        "LogisticRegression": LogisticRegression(verbose=1, n_jobs=4, max_iter=1000, solver='lbfgs', class_weight={0: class_1_weight, 1: class_2_weight}),
+        "DecisionTreeClassifier": DecisionTreeClassifier(class_weight={0: class_1_weight, 1: class_2_weight}),
+        "RandomForestClassifier": RandomForestClassifier(verbose=1, n_jobs=4, class_weight={0: class_1_weight, 1: class_2_weight}),
     }
     # create training and testing arrays from loaded data
     total_datapoints = len(datapoints_as_array)
@@ -152,13 +155,14 @@ if __name__ == "__main__":
     # this_model = sys.argv[2]  # "RandomForestClassifier"
     # these_bands = sys.argv[3]
     # class_1_weight, class_2_weight = float(sys.argv[4]), float(sys.argv[5])
-    classifiers = ["Perceptron", "LogisticRegression", "DecisionTreeClassifier", "RandomForestClassifier"]
-    band_combinations = ["rgb", "full-spectrum", "augmented"]
+    classifiers = ["LogisticRegression", "DecisionTreeClassifier", "RandomForestClassifier"]
+    band_combinations = ["rgb", "full-spectrum", "augmented", "extended"]
     this_dataset, class_1_weight, class_2_weight = "1M", 1, 1
     datapoints, labels = load_or_create_dataset(this_dataset)
+    destination_folder = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset"
     for this_model in classifiers:
         for these_bands in band_combinations:
-            process_name = f"{this_model}_{this_dataset}_{these_bands}_C1W_{class_1_weight}_C2W_{class_2_weight}"
+            process_name = f"{this_model}_{this_dataset}_C1W_{class_1_weight}_C2W_{class_2_weight}"
             train_stat_model(this_dataset, this_model, these_bands, class_1_weight, class_2_weight, datapoints_as_array=datapoints, labels_as_array=labels,
                              process_name=process_name)
             pass

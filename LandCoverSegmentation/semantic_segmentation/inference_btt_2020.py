@@ -148,14 +148,15 @@ def get_inference_loader(rasterized_shapefiles_path, district, image_path, model
 @torch.no_grad()
 def run_inference(args):
     model = UNet(topology=args.model_topology, input_channels=len(args.bands), num_classes=len(args.classes))
-    model.load_state_dict(torch.load(args.model_path), strict=False)  # map_location='cpu'), strict=False)
+    model.load_state_dict(torch.load(args.model_path, map_location='cpu'), strict=False)
     print('Log: Loaded pretrained {}'.format(args.model_path))
     model.eval()
     if args.cuda:
         print('log: Using GPU')
         model.cuda(device=args.device)
-    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
-                     "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    # all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan", "lower_dir", "malakand", "mansehra",
+    #                  "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
+    all_districts = ["abbottabad"]
     years = [2014, 2016, 2017, 2018, 2019, 2020]
     # change this to do this for all the images in that directory
     for district in all_districts:

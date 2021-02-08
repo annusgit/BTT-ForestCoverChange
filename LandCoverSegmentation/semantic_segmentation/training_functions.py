@@ -14,6 +14,8 @@ import pickle as pkl
 import itertools
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from collections import defaultdict
+from matplotlib.colors import ListedColormap
 plt.switch_backend('agg')
 import torchnet as tnt
 from torchnet.meter import ConfusionMeter as CM
@@ -22,8 +24,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 
-def train_net(model, model_topology, generated_data_path, input_dim, bands, classes, workers, pre_model, data_split_lists, save_dir, sum_dir, batch_size,
-              lr, epochs, log_after, cuda, device):
+def train_net(model, model_topology, generated_data_path, input_dim, bands, classes, workers, pre_model, data_split_lists, save_dir, sum_dir, error_maps_path,
+              batch_size, lr, epochs, log_after, cuda, device):
     # print(model)
     if cuda:
         print('log: Using GPU')
@@ -64,6 +66,7 @@ def train_net(model, model_topology, generated_data_path, input_dim, bands, clas
         print('LOG: Starting with best evaluation accuracy: {:.3f}%'.format(best_evaluation))
     ##########################################################################
     # training loop
+    bands_for_training = [x-1 for x in bands]
     for k in range(epochs):
         net_loss = []
         total_correct, total_examples = 0, 0
@@ -82,10 +85,11 @@ def train_net(model, model_topology, generated_data_path, input_dim, bands, clas
         for idx, data in enumerate(train_loader):
             model.train()
             model.zero_grad()
+            # get the required bands for training
             test_x, label = data['input'], data['label']
             test_x = test_x.cuda(device=device) if cuda else test_x
             label = label.cuda(device=device) if cuda else label
-            out_x, logits = model.forward(test_x)
+            out_x, logits = model.forward(test_x[:,bands_for_training,:,:])
             pred = torch.argmax(logits, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
             loss = focal_criterion(logits, not_one_hot_target)
@@ -125,6 +129,7 @@ def eval_net(**kwargs):
     all_ground_truth = np.array([])
     if cuda:
         model.cuda(device=device)
+    bands_for_testing = [x - 1 for x in kwargs['bands']]
     if 'writer' in kwargs.keys():
         # it means this is evaluation at training time
         val_loader = kwargs['val_loader']
@@ -137,7 +142,7 @@ def eval_net(**kwargs):
             test_x, label = data['input'], data['label']
             test_x = test_x.cuda(device=device) if cuda else test_x
             label = label.cuda(device=device) if cuda else label
-            out_x, softmaxed = model.forward(test_x)
+            out_x, softmaxed = model.forward(test_x[:,bands_for_testing,:,:])
             pred = torch.argmax(softmaxed, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
             not_one_hot_target_for_loss = not_one_hot_target.clone()
@@ -198,7 +203,7 @@ def eval_net(**kwargs):
             test_x, label = data['input'], data['label']
             test_x = test_x.cuda(device=device) if cuda else test_x
             label = label.cuda(device=device) if cuda else label
-            out_x, softmaxed = model.forward(test_x)
+            out_x, softmaxed = model.forward(test_x[:,bands_for_testing,:,:])
             pred = torch.argmax(softmaxed, dim=1)
             not_one_hot_target = torch.argmax(label, dim=1)
             #######################################################
@@ -244,4 +249,129 @@ def eval_net(**kwargs):
             pkl.dump(un_confusion_meter.value(), this, protocol=pkl.HIGHEST_PROTOCOL)
             pass
         pass
+    pass
+
+
+@torch.no_grad()
+def generate_error_maps(**kwargs):
+    model = kwargs['model']
+    classes = kwargs['classes']
+    num_classes = len(classes)
+    cuda = kwargs['cuda']
+    device = kwargs['device']
+    model.eval()
+    all_predictions = np.array([])  # empty all predictions
+    all_ground_truth = np.array([])
+    if cuda:
+        model.cuda(device=device)
+    # model, images, labels, pre_model, save_dir, sum_dir, batch_size, lr, log_after, cuda
+    pre_model = kwargs['pre_model']
+    batch_size = kwargs['batch_size']
+    un_confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=False)
+    confusion_meter = tnt.meter.ConfusionMeter(num_classes, normalized=True)
+    model_path = os.path.join(kwargs['save_dir'], pre_model)
+    model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
+    print('[LOG] Resumed model {} successfully!'.format(pre_model))
+    destination_path = os.path.join(kwargs['error_maps_path'], pre_model.split('.')[0])
+    if not os.path.exists(os.path.join(destination_path)):
+        os.mkdir(destination_path)
+    weights = torch.Tensor([10, 10])  # forest has ___ times more weight
+    weights = weights.cuda(device=device) if cuda else weights
+    focal_criterion = FocalLoss2d(weight=weights)
+    loaders = get_dataloaders_generated_data(generated_data_path=kwargs['generated_data_path'], data_split_lists_path=kwargs['data_split_lists'],
+                                             bands=kwargs['bands'], model_input_size=kwargs['input_dim'], num_classes=num_classes+1, train_split=0.8,
+                                             one_hot=True, batch_size=batch_size, num_workers=kwargs['workers'])
+    net_loss = list()
+    train_dataloader, val_dataloader, test_dataloader = loaders
+    total_correct, total_examples = 0, 0
+    print("[LOG] Evaluating performance on test data...")
+    forest_cmap = ListedColormap(["yellow", "green"])
+    true_false_cmap = ListedColormap(['red', 'blue'])
+    bands_for_testing = [x - 1 for x in kwargs['bands']]
+    accuracy_per_district = defaultdict(lambda: [0, 0])
+    for idx, data in enumerate(test_dataloader):
+        test_x, label, sample_identifiers = data['input'], data['label'], data['sample_identifier']
+        test_x = test_x.cuda(device=device) if cuda else test_x
+        label = label.cuda(device=device) if cuda else label
+        out_x, softmaxed = model.forward(test_x[:,bands_for_testing,:,:])
+        pred = torch.argmax(softmaxed, dim=1)
+        not_one_hot_target = torch.argmax(label, dim=1)
+        for i in range(not_one_hot_target.shape[0]):
+            image_name = sample_identifiers[0][i].split('/')[-1].split('.')[0]
+            district_name = image_name.split('_')[0]
+            if district_name == 'upper' or district_name == 'lower':
+                district_name += ' dir'
+            rgb_image = (255*(test_x.numpy()[i].transpose(1, 2, 0)[:,:,[3, 2, 1]])).astype(np.uint8)
+            district_ground_truth = not_one_hot_target[i,:,:].clone()
+            ground_truth = not_one_hot_target[i,:,:] - 1
+            ground_truth[ground_truth < 0] = 0
+            district_prediction = pred[i,:,:]
+            error_map = np.array(ground_truth == district_prediction).astype(np.uint8)
+            # calculate accuracy for this district image (below)
+            district_label_valid_indices = (district_ground_truth.view(-1) != 0)
+            district_valid_label = district_ground_truth.view(-1)[district_label_valid_indices] - 1
+            district_valid_pred = district_prediction.view(-1)[district_label_valid_indices]
+            district_accurate = (district_valid_pred == district_valid_label).sum().item()
+            district_total_pixels = float(district_valid_pred.view(-1).size(0))
+            accuracy_per_district[district_name][0] += district_accurate
+            accuracy_per_district[district_name][1] += district_total_pixels
+            # # calculate accuracy for this district image (above)
+            # fig = plt.figure(figsize=(12,3))
+            # fig.suptitle("[Non-Forest: Yellow; Forest: Green;] Error: [Correct: Blue, In-correct: Red]", fontsize="x-large")
+            # ax1 = fig.add_subplot(1, 4, 1)
+            # ax1.imshow(rgb_image)
+            # ax1.set_title('Image')
+            # ax2 = fig.add_subplot(1, 4, 2)
+            # ax2.imshow(ground_truth, cmap=forest_cmap, vmin=0, vmax=2)
+            # ax2.set_title('Ground Truth')
+            # ax3 = fig.add_subplot(1, 4, 3)
+            # ax3.imshow(district_prediction, cmap=forest_cmap, vmin=0, vmax=2)
+            # ax3.set_title('Prediction')
+            # ax4 = fig.add_subplot(1, 4, 4)
+            # ax4.imshow(error_map, cmap=true_false_cmap, vmin=0, vmax=1)
+            # ax4.set_title('Error')
+            # fig.savefig(os.path.join(destination_path, '{}.png'.format(image_name)))
+            # plt.close()
+        #######################################################
+        not_one_hot_target_for_loss = not_one_hot_target.clone()
+        not_one_hot_target_for_loss[not_one_hot_target_for_loss == 0] = 1
+        not_one_hot_target_for_loss -= 1
+        loss = focal_criterion(softmaxed, not_one_hot_target_for_loss)
+        label_valid_indices = (not_one_hot_target.view(-1) != 0)
+        # mind the '-1' fix please. This is to convert Forest and Non-Forest labels from 1, 2 to 0, 1
+        valid_label = not_one_hot_target.view(-1)[label_valid_indices] - 1
+        valid_pred = pred.view(-1)[label_valid_indices]
+        # NULL elimination
+        accurate = (valid_pred == valid_label).sum().item()
+        numerator = float(accurate)
+        denominator = float(valid_pred.view(-1).size(0))
+        total_correct += numerator
+        total_examples += denominator
+        net_loss.append(loss.item())
+        ########################################
+        # with NULL elimination
+        un_confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
+        confusion_meter.add(predicted=valid_pred.view(-1), target=valid_label.view(-1))
+        all_predictions = np.concatenate((all_predictions, valid_pred.view(-1).cpu()), axis=0)
+        all_ground_truth = np.concatenate((all_ground_truth, valid_label.view(-1).cpu()), axis=0)
+        if idx % 10 == 0:
+            print('log: on test sample: {}/{}'.format(idx, len(test_dataloader)))
+        #################################
+    mean_accuracy = total_correct*100/total_examples
+    mean_loss = np.asarray(net_loss).mean()
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    print('log: test:: total loss = {:.5f}, total accuracy = {:.5f}%'.format(mean_loss, mean_accuracy))
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    print('---> Confusion Matrix:')
+    print(confusion_meter.value())
+    confusion = confusion_matrix(all_ground_truth, all_predictions)
+    print('Confusion Matrix from Scikit-Learn\n')
+    print(confusion)
+    print('\nClassification Report\n')
+    print(classification_report(all_ground_truth, all_predictions, target_names=classes))
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    print('[LOG] Per District Test Accuracies')
+    print(accuracy_per_district)
+    for idx, (this_district, [true, total]) in enumerate(accuracy_per_district.items(), 1):
+        print("{}: {} -> {}/{} = {:.2f}%".format(idx, this_district, true, total, 100*true/total))
     pass

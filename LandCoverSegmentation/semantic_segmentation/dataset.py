@@ -261,11 +261,10 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             self.total_images = 0
             self.stride = stride
             self.one_hot = one_hot
-            self.bands = [x-1 for x in bands]
+            # self.bands = [x-1 for x in bands]
             self.num_classes = num_classes
             self.transformation = transformation
             self.mode = mode
-
             if os.path.exists(data_map_path):
                 print('LOG: Saved data map found! Loading now...')
                 with open(data_map_path, 'rb') as data_map:
@@ -288,7 +287,6 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
                             for j in range(0, col_limit, self.stride):
                                 self.all_images.append((example_path, i, j))
                                 self.total_images += 1
-
                 with open(data_map_path, 'wb') as data_map:
                     pickle.dump((self.data_list, self.all_images), file=data_map)  # , protocol=pickle.HIGHEST_PROTOCOL)
                     print('LOG: {} saved!'.format(data_map_path))
@@ -299,8 +297,8 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             (example_path, this_row, this_col) = self.all_images[k]
             # fix example path here
             # print("Fixing datapath")
-            # example_path = os.path.join("/mnt/e/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/Pickled_data",
-            #                             os.path.basename(os.path.normpath(example_path)))
+            example_path = os.path.join("/mnt/e/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/Pickled_data",
+                                        os.path.basename(os.path.normpath(example_path)))
             with open(example_path, 'rb') as this_pickle:
                 (example_subset, label_subset) = pickle.load(this_pickle)
                 example_subset = np.nan_to_num(example_subset)
@@ -321,8 +319,8 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(ndmi_band)))
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr_band)))
             this_example_subset = np.dstack((this_example_subset, np.nan_to_num(nbr2_band)))
-            # at this point, we pick which bands to forward based on command-line argument
-            this_example_subset = this_example_subset[:, :, self.bands]
+            # at this point, we pick which bands to forward based on command-line argument; (we are doing this in training_functions now)
+            # this_example_subset = this_example_subset[:, :, self.bands]
             this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
             if self.mode == 'train':
                 # Convert NULL-pixels to Non-Forest Class only during training
@@ -351,7 +349,7 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             this_example_subset, this_label_subset = toTensor(image=this_example_subset, label=this_label_subset, one_hot=self.one_hot)
             # if self.transformation:
             #     this_example_subset = self.transformation(this_example_subset)
-            return {'input': this_example_subset, 'label': this_label_subset}
+            return {'input': this_example_subset, 'label': this_label_subset, 'sample_identifier': (example_path, this_row, this_col)}
 
         def __len__(self):
             return 1*self.total_images if self.mode == 'train' else self.total_images

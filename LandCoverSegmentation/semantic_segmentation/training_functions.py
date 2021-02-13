@@ -372,6 +372,13 @@ def generate_error_maps(**kwargs):
     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
     print('[LOG] Per District Test Accuracies')
     print(accuracy_per_district)
+    numerator_sum, denominator_sum = 0, 0
     for idx, (this_district, [true, total]) in enumerate(accuracy_per_district.items(), 1):
         print("{}: {} -> {}/{} = {:.2f}%".format(idx, this_district, true, total, 100*true/total))
+        if this_district != 'upper dir' and this_district != 'chitral':
+            numerator_sum += true
+            denominator_sum += total
+        else:
+            print("[LOG] Skipping {} district for performance testing".format(this_district))
+    print("[LOG] Net Test Accuracy Without Chitral and Upper Dir: {:.2f}%".format(100*numerator_sum/denominator_sum))
     pass

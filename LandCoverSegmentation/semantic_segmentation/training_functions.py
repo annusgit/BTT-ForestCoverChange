@@ -304,7 +304,7 @@ def generate_error_maps(**kwargs):
             district_name = image_name.split('_')[0]
             if district_name == 'upper' or district_name == 'lower':
                 district_name += ' dir'
-            print(image_name)
+            print(district_name)
             rgb_image = (255*(test_x.numpy()[i].transpose(1, 2, 0)[:,:,[3, 2, 1]])).astype(np.uint8)
             district_ground_truth = not_one_hot_target[i,:,:].clone()
             ground_truth = not_one_hot_target[i,:,:] - 1

@@ -304,6 +304,7 @@ def generate_error_maps(**kwargs):
             district_name = image_name.split('_')[0]
             if district_name == 'upper' or district_name == 'lower':
                 district_name += ' dir'
+            print(image_name)
             rgb_image = (255*(test_x.numpy()[i].transpose(1, 2, 0)[:,:,[3, 2, 1]])).astype(np.uint8)
             district_ground_truth = not_one_hot_target[i,:,:].clone()
             ground_truth = not_one_hot_target[i,:,:] - 1
@@ -319,10 +320,11 @@ def generate_error_maps(**kwargs):
             accuracy_per_district[district_name][0] += district_accurate
             accuracy_per_district[district_name][1] += district_total_pixels
             # special variables
-            all_but_chitral_and_upper_dir_predictions = np.concatenate((all_but_chitral_and_upper_dir_predictions,
-                                                                        district_valid_pred.view(-1).cpu()), axis=0)
-            all_but_chitral_and_upper_dir_ground_truth = np.concatenate((all_but_chitral_and_upper_dir_ground_truth,
-                                                                         district_valid_label.view(-1).cpu()), axis=0)
+            # if image_name != "upper dir" and image_name != "chitral":
+            #     all_but_chitral_and_upper_dir_predictions = np.concatenate((all_but_chitral_and_upper_dir_predictions,
+            #                                                                 district_valid_pred.view(-1).cpu()), axis=0)
+            #     all_but_chitral_and_upper_dir_ground_truth = np.concatenate((all_but_chitral_and_upper_dir_ground_truth,
+            #                                                                  district_valid_label.view(-1).cpu()), axis=0)
             # # calculate accuracy for this district image (above)
             # fig = plt.figure(figsize=(12,3))
             # fig.suptitle("[Non-Forest: Yellow; Forest: Green;] Error: [Correct: Blue, In-correct: Red]", fontsize="x-large")

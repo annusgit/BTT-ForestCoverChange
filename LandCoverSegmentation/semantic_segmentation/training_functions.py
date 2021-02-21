@@ -262,6 +262,9 @@ def generate_error_maps(**kwargs):
     model.eval()
     all_predictions = np.array([])  # empty all predictions
     all_ground_truth = np.array([])
+    # special variables
+    all_but_chitral_and_upper_dir_predictions = np.array([])  # empty all predictions
+    all_but_chitral_and_upper_dir_ground_truth = np.array([])
     if cuda:
         model.cuda(device=device)
     # model, images, labels, pre_model, save_dir, sum_dir, batch_size, lr, log_after, cuda
@@ -315,6 +318,11 @@ def generate_error_maps(**kwargs):
             district_total_pixels = float(district_valid_pred.view(-1).size(0))
             accuracy_per_district[district_name][0] += district_accurate
             accuracy_per_district[district_name][1] += district_total_pixels
+            # special variables
+            all_but_chitral_and_upper_dir_predictions = np.concatenate((all_but_chitral_and_upper_dir_predictions,
+                                                                        district_valid_pred.view(-1).cpu()), axis=0)
+            all_but_chitral_and_upper_dir_ground_truth = np.concatenate((all_but_chitral_and_upper_dir_ground_truth,
+                                                                         district_valid_label.view(-1).cpu()), axis=0)
             # # calculate accuracy for this district image (above)
             # fig = plt.figure(figsize=(12,3))
             # fig.suptitle("[Non-Forest: Yellow; Forest: Green;] Error: [Correct: Blue, In-correct: Red]", fontsize="x-large")
@@ -370,6 +378,7 @@ def generate_error_maps(**kwargs):
     print('\nClassification Report\n')
     print(classification_report(all_ground_truth, all_predictions, target_names=classes))
     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    # Get per district test scores without Upper Dir and Chitral districts
     print('[LOG] Per District Test Accuracies')
     print(accuracy_per_district)
     numerator_sum, denominator_sum = 0, 0
@@ -381,4 +390,13 @@ def generate_error_maps(**kwargs):
         else:
             print("[LOG] Skipping {} district for performance testing".format(this_district))
     print("[LOG] Net Test Accuracy Without Chitral and Upper Dir: {:.2f}%".format(100*numerator_sum/denominator_sum))
+    print('---> Confusion Matrix:')
+    print(confusion_meter.value())
+    confusion = confusion_matrix(all_but_chitral_and_upper_dir_ground_truth, all_but_chitral_and_upper_dir_predictions)
+    print('Confusion Matrix from Scikit-Learn\n')
+    print(confusion)
+    print('\nClassification Report\n')
+    print(classification_report(all_but_chitral_and_upper_dir_ground_truth, all_but_chitral_and_upper_dir_predictions,
+                                target_names=classes))
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
     pass

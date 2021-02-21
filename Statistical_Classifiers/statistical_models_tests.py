@@ -23,8 +23,8 @@ from sklearn.svm import SVC
 
 def print_to_file(this_str, file_name):
     print(this_str)
-    print(this_str, file=open(os.path.join("E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/",
-                                           file_name), "a"))
+    print(this_str, file=open(os.path.join("E:/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/"
+                                           "statistical_models_dataset/15-Districts/", file_name), "a"))
 
 
 def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test, y_test, process_name):
@@ -48,8 +48,8 @@ def train_and_test_statistical_model(name, classifier, x_train, y_train, x_test,
 
 def load_or_create_dataset(this_dataset):
     assert this_dataset == "100K" or this_dataset == "1M"
-    raw_dataset_path = "E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/Pickled_data/"
-    processed_dataset_path = f"E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/" \
+    raw_dataset_path = "E:/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/Pickled_data/"
+    processed_dataset_path = f"E:/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/statistical_models_dataset/15-Districts/" \
                              f"{this_dataset}_dataset.pkl"
     # prepare data if it doesn't already exist
     if os.path.exists(processed_dataset_path):
@@ -60,7 +60,7 @@ def load_or_create_dataset(this_dataset):
         print("(LOG): Loaded Precompiled Serialized Dataset Successfully!")
     else:
         print("(LOG): No Precompiled Dataset Found! Creating New Dataset Now...")
-        all_pickle_files_in_pickled_dataset = [os.path.join(raw_dataset_path, x) for x in os.listdir(raw_dataset_path)]
+        all_pickle_files_in_pickled_dataset = os.listdir(raw_dataset_path)
         datapoints_as_array, labels_as_array = np.empty(shape=[1, 18]), np.empty(shape=[1, ])
         # random.seed(datetime.now())
         np.random.seed(232)
@@ -68,9 +68,14 @@ def load_or_create_dataset(this_dataset):
         if this_dataset == "100K":
             num_samples /= 10
         for idx, this_pickled_file in enumerate(all_pickle_files_in_pickled_dataset):
+            district_name_first_part = this_pickled_file.split('_')[0]
+            if district_name_first_part == 'upper' or district_name_first_part == 'chitral':
+                print("[LOG] Skipping {}".format(this_pickled_file))
+                continue
+            full_data_sample_path = os.path.join(raw_dataset_path, this_pickled_file)
             if idx % 100 == 0:
-                print("(LOG): Processing ({}/{}) => {}".format(idx, len(all_pickle_files_in_pickled_dataset), this_pickled_file))
-            with open(this_pickled_file, 'rb') as this_small_data_sample:
+                print("(LOG): Processing ({}/{}) => {}".format(idx, len(all_pickle_files_in_pickled_dataset), full_data_sample_path))
+            with open(full_data_sample_path, 'rb') as this_small_data_sample:
                 small_image_sample, small_label_sample = cPickle.load(this_small_data_sample, encoding='bytes')
                 this_shape = small_image_sample.shape
                 random_rows, random_cols = np.random.randint(0, this_shape[0], size=num_samples), np.random.randint(0, this_shape[0], size=num_samples)
@@ -112,7 +117,7 @@ def load_or_create_dataset(this_dataset):
 
 
 def train_stat_model(this_dataset, this_model, these_bands, class_1_weight, class_2_weight, datapoints_as_array, labels_as_array, process_name):
-    model_path = f"E:/Forest Cover - Redo 2020/Google Cloud - Training/Training Data/Clipped dataset/statistical_models_dataset/" \
+    model_path = f"E:/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/statistical_models_dataset/15-Districts/" \
                  f"{process_name}-{these_bands}.pkl"
     assert this_model == "SVC" or this_model == "Perceptron" or this_model == "GaussianNB" or this_model == "LogisticRegression" or \
            this_model == "DecisionTreeClassifier" or this_model == "RandomForestClassifier"
@@ -159,7 +164,7 @@ if __name__ == "__main__":
     band_combinations = ["rgb", "full-spectrum", "augmented", "extended"]
     this_dataset, class_1_weight, class_2_weight = "1M", 1, 1
     datapoints, labels = load_or_create_dataset(this_dataset)
-    destination_folder = "E:\\Forest Cover - Redo 2020\\Google Cloud - Training\\Training Data\\Clipped dataset\\statistical_models_dataset"
+    destination_folder = "E:\\Forest Cover - Redo 2020\\Trainings and Results\\Training Data\\Clipped dataset\\statistical_models_dataset"
     for this_model in classifiers:
         for these_bands in band_combinations:
             process_name = f"{this_model}_{this_dataset}_C1W_{class_1_weight}_C2W_{class_2_weight}"

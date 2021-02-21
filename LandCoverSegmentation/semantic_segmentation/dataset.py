@@ -297,8 +297,8 @@ def get_dataloaders_generated_data(generated_data_path, data_split_lists_path, m
             (example_path, this_row, this_col) = self.all_images[k]
             # fix example path here
             # print("Fixing datapath")
-            example_path = os.path.join("/mnt/e/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/Pickled_data",
-                                        os.path.basename(os.path.normpath(example_path)))
+            # example_path = os.path.join("/mnt/e/Forest Cover - Redo 2020/Trainings and Results/Training Data/Clipped dataset/Pickled_data",
+            #                             os.path.basename(os.path.normpath(example_path)))
             with open(example_path, 'rb') as this_pickle:
                 (example_subset, label_subset) = pickle.load(this_pickle)
                 example_subset = np.nan_to_num(example_subset)
